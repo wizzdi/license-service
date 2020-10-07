@@ -60,7 +60,7 @@ public class LicensingProductService implements ServicePlugin {
         return licensingProduct;
     }
 
-    private boolean updateLicensingProductNoMerge(LicensingProduct licensingProduct, LicensingProductCreate licensingProductCreate) {
+    public boolean updateLicensingProductNoMerge(LicensingProduct licensingProduct, LicensingProductCreate licensingProductCreate) {
         boolean update = licensingEntityService.updateLicensingEntityNoMerge(licensingProduct, licensingProductCreate);
 
         return update;

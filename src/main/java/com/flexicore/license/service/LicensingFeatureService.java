@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.pf4j.Extension;
 import com.flexicore.annotations.plugins.PluginInfo;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.ws.rs.BadRequestException;
 import java.util.*;
@@ -62,7 +63,7 @@ public class LicensingFeatureService implements ServicePlugin {
         return licensingFeature;
     }
 
-    private boolean updateLicensingFeatureNoMerge(LicensingFeature licensingFeature, LicensingFeatureCreate licensingFeatureCreate) {
+    public boolean updateLicensingFeatureNoMerge(LicensingFeature licensingFeature, LicensingFeatureCreate licensingFeatureCreate) {
         boolean update = licensingEntityService.updateLicensingEntityNoMerge(licensingFeature, licensingFeatureCreate);
         if(licensingFeatureCreate.getLicensingProduct()!=null && (licensingFeature.getProduct()==null || !licensingFeatureCreate.getLicensingProduct().getId().equals(licensingFeature.getProduct().getId()))){
             licensingFeature.setProduct(licensingFeatureCreate.getLicensingProduct());
@@ -106,5 +107,8 @@ public class LicensingFeatureService implements ServicePlugin {
         return new PaginationResponse<>(list, licensingFeatureFiltering, count);
     }
 
-
+    @Transactional
+    public void massMerge(List<?> toMerge) {
+        repository.massMerge(toMerge);
+    }
 }

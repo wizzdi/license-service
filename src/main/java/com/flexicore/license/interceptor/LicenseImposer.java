@@ -8,6 +8,7 @@ package com.flexicore.license.interceptor;
 
 import com.flexicore.annotations.OperationsInside;
 import com.flexicore.data.jsoncontainers.OperationInfo;
+import com.flexicore.interfaces.AspectPlugin;
 import com.flexicore.interfaces.ServicePlugin;
 import com.flexicore.license.annotations.HasFeature;
 import com.flexicore.license.annotations.HasFeatures;
@@ -28,6 +29,7 @@ import org.pf4j.Extension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import javax.websocket.CloseReason;
@@ -52,8 +54,8 @@ import java.util.stream.Stream;
 @Aspect
 @Component
 @Extension
-@DeclarePrecedence("SecurityImposer,LicenseImposer")
-public class LicenseImposer implements ServicePlugin {
+@Order(100)
+public class LicenseImposer implements AspectPlugin {
 
     private static final Logger logger = LoggerFactory.getLogger(LicenseImposer.class);
     @Autowired
@@ -84,7 +86,6 @@ public class LicenseImposer implements ServicePlugin {
 
         User user = securityContext.getUser();
         List<Tenant> tenants = securityContext.getTenants();
-        OperationInfo operationInfo = securityService.getIOperation(method);
 
         List<HasFeature> features = new ArrayList<>();
         HasFeatures featuresOnClass = method.getDeclaringClass().getAnnotation(HasFeatures.class);
@@ -92,11 +93,13 @@ public class LicenseImposer implements ServicePlugin {
             features.addAll(Arrays.asList(featuresOnClass.features()));
         }
         HasFeatures featuresOnMethod = method.getAnnotation(HasFeatures.class);
-        if (featuresOnMethod != null && user != null && tenants != null) {
+        if(featuresOnMethod!=null){
             if (featuresOnMethod.noOtherLicenseRequired()) {
                 features.clear();
             }
             features.addAll(Arrays.asList(featuresOnMethod.features()));
+        }
+        if ( user != null && tenants != null) {
             Set<String> canonicalNames = features.parallelStream().map(HasFeature::canonicalName).collect(Collectors.toSet());
             List<LicensingFeature> licensingFeatures = canonicalNames.isEmpty() ? new ArrayList<>() : licensingFeatureService.listAllLicensingFeatures(new LicensingFeatureFiltering().setCanonicalNames(canonicalNames), null);
 
