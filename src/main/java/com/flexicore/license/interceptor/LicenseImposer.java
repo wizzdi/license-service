@@ -6,10 +6,11 @@
  ******************************************************************************/
 package com.flexicore.license.interceptor;
 
-import com.flexicore.annotations.HasFeature;
 import com.flexicore.annotations.OperationsInside;
 import com.flexicore.data.jsoncontainers.OperationInfo;
 import com.flexicore.interfaces.ServicePlugin;
+import com.flexicore.license.annotations.HasFeature;
+import com.flexicore.license.annotations.HasFeatures;
 import com.flexicore.license.model.LicensingFeature;
 import com.flexicore.license.request.LicensingFeatureFiltering;
 import com.flexicore.license.service.LicenseRequestService;
@@ -86,16 +87,16 @@ public class LicenseImposer implements ServicePlugin {
         OperationInfo operationInfo = securityService.getIOperation(method);
 
         List<HasFeature> features = new ArrayList<>();
-        OperationsInside operationsInside = method.getDeclaringClass().getAnnotation(OperationsInside.class);
-        if (operationsInside != null) {
-            features.addAll(Arrays.asList(operationsInside.features()));
+        HasFeatures featuresOnClass = method.getDeclaringClass().getAnnotation(HasFeatures.class);
+        if (featuresOnClass != null) {
+            features.addAll(Arrays.asList(featuresOnClass.features()));
         }
-
-        if (operationInfo.getiOperation() != null && user != null && tenants != null) {
-            if (operationInfo.getiOperation().noOtherLicenseRequired()) {
+        HasFeatures featuresOnMethod = method.getAnnotation(HasFeatures.class);
+        if (featuresOnMethod != null && user != null && tenants != null) {
+            if (featuresOnMethod.noOtherLicenseRequired()) {
                 features.clear();
             }
-            features.addAll(Arrays.asList(operationInfo.getiOperation().features()));
+            features.addAll(Arrays.asList(featuresOnMethod.features()));
             Set<String> canonicalNames = features.parallelStream().map(HasFeature::canonicalName).collect(Collectors.toSet());
             List<LicensingFeature> licensingFeatures = canonicalNames.isEmpty() ? new ArrayList<>() : licensingFeatureService.listAllLicensingFeatures(new LicensingFeatureFiltering().setCanonicalNames(canonicalNames), null);
 

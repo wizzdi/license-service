@@ -51,7 +51,7 @@ public class LicensingProductRESTService implements RestServicePlugin {
     @Path("/getAllLicensingProducts")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @IOperation(access = Access.allow, Name = "getAllLicensingProducts", Description = "lists LicensingProducts", relatedClazzes = {LicensingProduct.class},noOtherLicenseRequired = true)
+    @IOperation(access = Access.allow, Name = "getAllLicensingProducts", Description = "lists LicensingProducts", relatedClazzes = {LicensingProduct.class})
     public PaginationResponse<LicensingProduct> getAllLicensingProducts(@HeaderParam("authenticationkey") String authenticationkey
             , LicensingProductFiltering licensingProductFiltering, @Context SecurityContext securityContext) {
         licensingProductService.validate(licensingProductFiltering, securityContext);

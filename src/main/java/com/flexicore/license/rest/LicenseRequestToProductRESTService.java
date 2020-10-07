@@ -53,7 +53,7 @@ public class LicenseRequestToProductRESTService implements RestServicePlugin {
     @Path("/getAllLicenseRequestToProducts")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @IOperation(access = Access.allow, Name = "getAllLicenseRequestToProducts", Description = "lists LicenseRequestToProducts", relatedClazzes = {LicenseRequestToProduct.class},noOtherLicenseRequired = true)
+    @IOperation(access = Access.allow, Name = "getAllLicenseRequestToProducts", Description = "lists LicenseRequestToProducts", relatedClazzes = {LicenseRequestToProduct.class})
     public PaginationResponse<LicenseRequestToProduct> getAllLicenseRequestToProducts(@HeaderParam("authenticationkey") String authenticationkey
             , LicenseRequestToProductFiltering licenseRequestToProductFiltering, @Context SecurityContext securityContext) {
         licenseRequestToProductService.validate(licenseRequestToProductFiltering, securityContext);
@@ -67,7 +67,7 @@ public class LicenseRequestToProductRESTService implements RestServicePlugin {
     @Path("/createLicenseRequestToProduct")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @IOperation(access = Access.allow, Name = "Creates LicenseRequestToProduct", Description = "Creates LicenseRequestToProduct", relatedClazzes = {LicenseRequestToProduct.class},noOtherLicenseRequired = true)
+    @IOperation(access = Access.allow, Name = "Creates LicenseRequestToProduct", Description = "Creates LicenseRequestToProduct", relatedClazzes = {LicenseRequestToProduct.class})
     public LicenseRequestToProduct createLicenseRequestToProduct(@HeaderParam("authenticationkey") String authenticationkey
             , LicenseRequestToProductCreate licenseRequestToProductCreate, @Context SecurityContext securityContext) {
         licenseRequestToProductService.validate(licenseRequestToProductCreate, securityContext);
@@ -79,7 +79,7 @@ public class LicenseRequestToProductRESTService implements RestServicePlugin {
     @Path("/updateLicenseRequestToProduct")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @IOperation(access = Access.allow, Name = "Updates LicenseRequestToProduct", Description = "Updates LicenseRequestToProduct", relatedClazzes = {LicenseRequestToProduct.class},noOtherLicenseRequired = true)
+    @IOperation(access = Access.allow, Name = "Updates LicenseRequestToProduct", Description = "Updates LicenseRequestToProduct", relatedClazzes = {LicenseRequestToProduct.class})
     public LicenseRequestToProduct updateLicenseRequestToProduct(@HeaderParam("authenticationkey") String authenticationkey
             , LicenseRequestToProductUpdate licenseRequestToProductUpdate, @Context SecurityContext securityContext) {
         String id=licenseRequestToProductUpdate.getId();

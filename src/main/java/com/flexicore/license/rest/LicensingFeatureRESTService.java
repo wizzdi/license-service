@@ -50,7 +50,7 @@ public class LicensingFeatureRESTService implements RestServicePlugin {
     @Path("/getAllLicensingFeatures")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @IOperation(access = Access.allow, Name = "getAllLicensingFeatures", Description = "lists LicensingFeatures", relatedClazzes = {LicensingFeature.class},noOtherLicenseRequired = true)
+    @IOperation(access = Access.allow, Name = "getAllLicensingFeatures", Description = "lists LicensingFeatures", relatedClazzes = {LicensingFeature.class})
     public PaginationResponse<LicensingFeature> getAllLicensingFeatures(@HeaderParam("authenticationkey") String authenticationkey
             , LicensingFeatureFiltering licensingFeatureFiltering, @Context SecurityContext securityContext) {
         licensingFeatureService.validate(licensingFeatureFiltering, securityContext);

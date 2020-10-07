@@ -53,7 +53,7 @@ public class LicenseRequestRESTService implements RestServicePlugin {
     @Path("/getAllLicenseRequests")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @IOperation(access = Access.allow, Name = "getAllLicenseRequests", Description = "lists LicenseRequests", relatedClazzes = {LicenseRequest.class},noOtherLicenseRequired = true)
+    @IOperation(access = Access.allow, Name = "getAllLicenseRequests", Description = "lists LicenseRequests", relatedClazzes = {LicenseRequest.class})
     public PaginationResponse<LicenseRequest> getAllLicenseRequests(@HeaderParam("authenticationkey") String authenticationkey
             , LicenseRequestFiltering licenseRequestFiltering, @Context SecurityContext securityContext) {
         licenseRequestService.validate(licenseRequestFiltering, securityContext);
@@ -67,7 +67,7 @@ public class LicenseRequestRESTService implements RestServicePlugin {
     @Path("/createLicenseRequest")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @IOperation(access = Access.allow, Name = "Creates LicenseRequest", Description = "Creates LicenseRequest", relatedClazzes = {LicenseRequest.class},noOtherLicenseRequired = true)
+    @IOperation(access = Access.allow, Name = "Creates LicenseRequest", Description = "Creates LicenseRequest", relatedClazzes = {LicenseRequest.class})
     public LicenseRequest createLicenseRequest(@HeaderParam("authenticationkey") String authenticationkey
             , LicenseRequestCreate licenseRequestCreate, @Context SecurityContext securityContext) {
         licenseRequestService.validate(licenseRequestCreate, securityContext);
@@ -80,7 +80,7 @@ public class LicenseRequestRESTService implements RestServicePlugin {
     @Path("/updateLicenseRequest")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @IOperation(access = Access.allow, Name = "Updates LicenseRequest", Description = "Updates LicenseRequest", relatedClazzes = {LicenseRequest.class},noOtherLicenseRequired = true)
+    @IOperation(access = Access.allow, Name = "Updates LicenseRequest", Description = "Updates LicenseRequest", relatedClazzes = {LicenseRequest.class})
     public LicenseRequest updateLicenseRequest(@HeaderParam("authenticationkey") String authenticationkey
             , LicenseRequestUpdate licenseRequestUpdate, @Context SecurityContext securityContext) {
         String id=licenseRequestUpdate.getId();

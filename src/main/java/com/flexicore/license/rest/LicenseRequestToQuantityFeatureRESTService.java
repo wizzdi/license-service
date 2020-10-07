@@ -53,7 +53,7 @@ public class LicenseRequestToQuantityFeatureRESTService implements RestServicePl
     @Path("/getAllLicenseRequestToQuantityFeatures")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @IOperation(access = Access.allow, Name = "getAllLicenseRequestToQuantityFeatures", Description = "lists LicenseRequestToQuantityFeatures", relatedClazzes = {LicenseRequestToQuantityFeature.class},noOtherLicenseRequired = true)
+    @IOperation(access = Access.allow, Name = "getAllLicenseRequestToQuantityFeatures", Description = "lists LicenseRequestToQuantityFeatures", relatedClazzes = {LicenseRequestToQuantityFeature.class})
     public PaginationResponse<LicenseRequestToQuantityFeature> getAllLicenseRequestToQuantityFeatures(@HeaderParam("authenticationkey") String authenticationkey
             , LicenseRequestToQuantityFeatureFiltering licenseRequestToQuantityFeatureFiltering, @Context SecurityContext securityContext) {
         licenseRequestToQuantityFeatureService.validate(licenseRequestToQuantityFeatureFiltering, securityContext);
@@ -67,7 +67,7 @@ public class LicenseRequestToQuantityFeatureRESTService implements RestServicePl
     @Path("/createLicenseRequestToQuantityFeature")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @IOperation(access = Access.allow, Name = "Creates LicenseRequestToQuantityFeature", Description = "Creates LicenseRequestToQuantityFeature", relatedClazzes = {LicenseRequestToQuantityFeature.class},noOtherLicenseRequired = true)
+    @IOperation(access = Access.allow, Name = "Creates LicenseRequestToQuantityFeature", Description = "Creates LicenseRequestToQuantityFeature", relatedClazzes = {LicenseRequestToQuantityFeature.class})
     public LicenseRequestToQuantityFeature createLicenseRequestToQuantityFeature(@HeaderParam("authenticationkey") String authenticationkey
             , LicenseRequestToQuantityFeatureCreate licenseRequestToQuantityFeatureCreate, @Context SecurityContext securityContext) {
         licenseRequestToQuantityFeatureService.validate(licenseRequestToQuantityFeatureCreate, securityContext);
@@ -79,7 +79,7 @@ public class LicenseRequestToQuantityFeatureRESTService implements RestServicePl
     @Path("/updateLicenseRequestToQuantityFeature")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @IOperation(access = Access.allow, Name = "Updates LicenseRequestToQuantityFeature", Description = "Updates LicenseRequestToQuantityFeature", relatedClazzes = {LicenseRequestToQuantityFeature.class},noOtherLicenseRequired = true)
+    @IOperation(access = Access.allow, Name = "Updates LicenseRequestToQuantityFeature", Description = "Updates LicenseRequestToQuantityFeature", relatedClazzes = {LicenseRequestToQuantityFeature.class})
     public LicenseRequestToQuantityFeature updateLicenseRequestToQuantityFeature(@HeaderParam("authenticationkey") String authenticationkey
             , LicenseRequestToQuantityFeatureUpdate licenseRequestToQuantityFeatureUpdate, @Context SecurityContext securityContext) {
         String id=licenseRequestToQuantityFeatureUpdate.getId();

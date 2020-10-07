@@ -52,7 +52,7 @@ public class LicenseRequestToFeatureRESTService implements RestServicePlugin {
     @Path("/getAllLicenseRequestToFeatures")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @IOperation(access = Access.allow, Name = "getAllLicenseRequestToFeatures", Description = "lists LicenseRequestToFeatures", relatedClazzes = {LicenseRequestToFeature.class},noOtherLicenseRequired = true)
+    @IOperation(access = Access.allow, Name = "getAllLicenseRequestToFeatures", Description = "lists LicenseRequestToFeatures", relatedClazzes = {LicenseRequestToFeature.class})
     public PaginationResponse<LicenseRequestToFeature> getAllLicenseRequestToFeatures(@HeaderParam("authenticationkey") String authenticationkey
             , LicenseRequestToFeatureFiltering licenseRequestToFeatureFiltering, @Context SecurityContext securityContext) {
         licenseRequestToFeatureService.validate(licenseRequestToFeatureFiltering, securityContext);
@@ -66,7 +66,7 @@ public class LicenseRequestToFeatureRESTService implements RestServicePlugin {
     @Path("/createLicenseRequestToFeature")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @IOperation(access = Access.allow, Name = "Creates LicenseRequestToFeature", Description = "Creates LicenseRequestToFeature", relatedClazzes = {LicenseRequestToFeature.class},noOtherLicenseRequired = true)
+    @IOperation(access = Access.allow, Name = "Creates LicenseRequestToFeature", Description = "Creates LicenseRequestToFeature", relatedClazzes = {LicenseRequestToFeature.class})
     public LicenseRequestToFeature createLicenseRequestToFeature(@HeaderParam("authenticationkey") String authenticationkey
             , LicenseRequestToFeatureCreate licenseRequestToFeatureCreate, @Context SecurityContext securityContext) {
         licenseRequestToFeatureService.validate(licenseRequestToFeatureCreate, securityContext);
@@ -78,7 +78,7 @@ public class LicenseRequestToFeatureRESTService implements RestServicePlugin {
     @Path("/updateLicenseRequestToFeature")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @IOperation(access = Access.allow, Name = "Updates LicenseRequestToFeature", Description = "Updates LicenseRequestToFeature", relatedClazzes = {LicenseRequestToFeature.class},noOtherLicenseRequired = true)
+    @IOperation(access = Access.allow, Name = "Updates LicenseRequestToFeature", Description = "Updates LicenseRequestToFeature", relatedClazzes = {LicenseRequestToFeature.class})
     public LicenseRequestToFeature updateLicenseRequestToFeature(@HeaderParam("authenticationkey") String authenticationkey
             , LicenseRequestToFeatureUpdate licenseRequestToFeatureUpdate, @Context SecurityContext securityContext) {
         String id=licenseRequestToFeatureUpdate.getId();
