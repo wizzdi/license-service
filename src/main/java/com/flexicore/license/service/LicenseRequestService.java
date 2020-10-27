@@ -1,7 +1,6 @@
 package com.flexicore.license.service;
 
 
-import com.flexicore.constants.Constants;
 import com.flexicore.license.data.LicenseRequestRepository;
 import com.flexicore.data.jsoncontainers.ObjectMapperContextResolver;
 import com.flexicore.data.jsoncontainers.PaginationResponse;
@@ -31,7 +30,10 @@ import com.google.crypto.tink.PublicKeyVerify;
 import com.google.crypto.tink.config.TinkConfig;
 import com.google.crypto.tink.signature.PublicKeyVerifyFactory;
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.pf4j.Extension;
 import com.flexicore.annotations.plugins.PluginInfo;
@@ -52,7 +54,6 @@ import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 
@@ -83,7 +84,13 @@ public class LicenseRequestService implements ServicePlugin {
     @Autowired
     private EncryptionService encryptionService;
 
-   private Logger logger = Logger.getLogger(getClass().getCanonicalName());
+    @Value("${flexicore.license.publicKey:/home/flexicore/license/public.key}")
+    private String publicKeyPath;
+    @Value("${flexicore.license.timeShiftLocation:/home/flexicore/timeshift}")
+    private String timeShiftLocation;
+
+
+   private static final Logger logger = LoggerFactory.getLogger(LicenseRequestService.class);
 
     @Autowired
     private ApplicationEventPublisher updateLicensingCacheEvent;
@@ -107,7 +114,7 @@ public class LicenseRequestService implements ServicePlugin {
                 macAddress = hardwareAddress.get(0);
             }
         } catch (SocketException e) {
-            logger.log(Level.SEVERE, "failed getting mac addresses", e);
+            logger.error("failed getting mac addresses", e);
         }
         licenseRequestCreate.setMacAddress(macAddress);
         LicenseRequest licenseRequest = createLicenseRequestNoMerge(licenseRequestCreate, securityContext);
@@ -210,7 +217,7 @@ public class LicenseRequestService implements ServicePlugin {
 
     private PublicKeyVerify getPublicKey() throws GeneralSecurityException, IOException {
         TinkConfig.register();
-        File file = new File(Constants.PUBLIC_KEY);
+        File file = new File(publicKeyPath);
         KeysetHandle keysetHandle = CleartextKeysetHandle.read(JsonKeysetReader.withFile(file));
         return PublicKeyVerifyFactory.getPrimitive(keysetHandle);
 
@@ -229,14 +236,14 @@ public class LicenseRequestService implements ServicePlugin {
             }
 
         } catch (IOException | GeneralSecurityException e) {
-            logger.log(Level.SEVERE, "verification failed", e);
+            logger.error("verification failed", e);
         }
         return false;
     }
 
 
     private boolean hasPublicKey() {
-        return new File(Constants.PUBLIC_KEY).exists();
+        return new File(publicKeyPath).exists();
     }
 
     private List<String> getHardwareAddress() throws SocketException {
@@ -275,7 +282,7 @@ public class LicenseRequestService implements ServicePlugin {
             return true;
         }
         if (isTimeWasManuallyShifted(System.currentTimeMillis())) {
-            logger.warning("Time shift detected");
+            logger.warn("Time shift detected");
             return false;
         }
         if (!hasPublicKey()) {
@@ -287,7 +294,7 @@ public class LicenseRequestService implements ServicePlugin {
             macs = getHardwareAddress();
 
         } catch (SocketException e) {
-            logger.log(Level.WARNING, "could not get machine mac", e);
+            logger.warn("could not get machine mac", e);
         }
 
         List<LicenseRequest> licenseRequests = getSuitableFeatureLicenseRequests(tenants, feature, macs, deviceSerialNumbers);
@@ -353,7 +360,7 @@ public class LicenseRequestService implements ServicePlugin {
     private static final String timeShiftKey = "YvnxVsqaPahye6jmHDjKqTuEruRBx9Mc6sFHjafttUm947CSBhnmfW5Jfa4VaMVEzQNvxrTRajwbY2tWebaxMhRGGqe3R8R7WazR";
 
     private boolean isTimeWasManuallyShifted(long currentTime) {
-        File timeShift = new File(Constants.timeShiftLocation);
+        File timeShift = new File(timeShiftLocation);
         if (timeShift.exists()) {
             try {
                 String s = FileUtils.readFileToString(timeShift, StandardCharsets.UTF_8);
@@ -365,7 +372,7 @@ public class LicenseRequestService implements ServicePlugin {
                 }
                 return shifted;
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "unable to read timeshift file", e);
+                logger.error("unable to read timeshift file", e);
             }
         }
         return true;
@@ -375,7 +382,7 @@ public class LicenseRequestService implements ServicePlugin {
         File parentFile = timeShift.getParentFile();
         if(!parentFile.exists()){
             if(!parentFile.mkdirs()){
-                logger.warning("Failed creating timeshift file");
+                logger.warn("Failed creating timeshift file");
             }
         }
         String timeString = currentTime + "";
@@ -399,18 +406,18 @@ public class LicenseRequestService implements ServicePlugin {
             }
             repository.massMerge(Arrays.asList(fileResource, licenseRequest));
             if(isLicenseValid(licenseRequest,licenseHolder)){
-                File timeShift = new File(Constants.timeShiftLocation);
+                File timeShift = new File(timeShiftLocation);
 
                 if (!timeShift.exists()) {
                     try {
                         updateTimeShiftFile(System.currentTimeMillis(), timeShift);
                     } catch (GeneralSecurityException | IOException e) {
-                        logger.log(Level.SEVERE, "failed updating license file", e);
+                        logger.error("failed updating license file", e);
                     }
                 }
             }
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "unable to get license File");
+            logger.error("unable to get license File");
         }
     }
 
