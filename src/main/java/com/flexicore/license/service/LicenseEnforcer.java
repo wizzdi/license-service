@@ -10,6 +10,7 @@ import com.flexicore.license.model.LicenseRequest;
 import com.flexicore.license.model.LicenseRequestToQuantityFeature;
 import com.flexicore.license.request.LicenseRequestFiltering;
 import com.flexicore.license.request.LicenseRequestToQuantityFeatureFiltering;
+import com.flexicore.license.request.QuotaLimitation;
 import com.flexicore.model.Baseclass;
 import com.flexicore.model.ClazzIdFiltering;
 import com.flexicore.model.Tenant;
@@ -19,17 +20,20 @@ import com.flexicore.service.BaseclassService;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.pf4j.Extension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiFunction;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 
@@ -40,12 +44,14 @@ public class LicenseEnforcer implements ServicePlugin {
 
     private static AtomicBoolean init = new AtomicBoolean(false);
 
-    private static Cache<String, Integer> requestedLicense = CacheBuilder.newBuilder().build();
-    private static Cache<String, LicenseRequest> licensed = CacheBuilder.newBuilder().build();
-    private static Cache<String, AtomicLong> cachedCount = CacheBuilder.newBuilder().build();
+    private final static Cache<String, Integer> requestedLicense = CacheBuilder.newBuilder().build();
+    private final static Cache<String, LicenseRequest> licensed = CacheBuilder.newBuilder().build();
+    private final static Cache<String, AtomicLong> cachedCount = CacheBuilder.newBuilder().build();
+    private final static Map<String, QuotaLimitation> quotaLimitationCache = new ConcurrentHashMap<>();
 
 
-    private Logger logger = Logger.getLogger(getClass().getCanonicalName());
+
+    private static final Logger logger = LoggerFactory.getLogger(LicenseEnforcer.class);
 
     @Autowired
     private LicenseRequestToQuantityFeatureService licenseRequestToQuantityFeatureService;
@@ -64,23 +70,37 @@ public class LicenseEnforcer implements ServicePlugin {
             Tenant tenant = b.getTenant();
             String tenantId = tenant.getId();
             String key = getKey(tenantId, canonicalName);
-            Integer quantity = requestedLicense.getIfPresent(key);
-            if (quantity != null) {
+            QuotaLimitation quotaLimitation = quotaLimitationCache.get(canonicalName);
+            if (quotaLimitation != null) {
                 try {
+                    int basic=quotaLimitation.getQuota();
+                    Integer extended = requestedLicense.getIfPresent(key);
+                    boolean useExtended = extended != null && extended > basic;
+                    int allowed= useExtended ?extended:basic;
+
                     AtomicLong currentQuantity = cachedCount.get(key, () -> new AtomicLong(0));
-                    long val = currentQuantity.updateAndGet(operand -> operand > quantity ? operand : operand + 1);
-                    LicenseRequest license = licensed.getIfPresent(key);
-                    if (license == null) {
-                        throw new ExceededQuota("Quota of " + canonicalName + " for tenant +" + tenant.getName() + "(" + tenantId + ") Exceeded - no license");
+                    long val = currentQuantity.updateAndGet(operand -> operand > allowed ? operand : operand + 1);
+                    if(useExtended){
+                        LicenseRequest license = licensed.getIfPresent(key);
+                        if (license == null) {
+                            throw new ExceededQuota("Quota of " + canonicalName + " for tenant +" + tenant.getName() + "(" + tenantId + ") Exceeded - no license");
+                        }
                     }
-                    if (val > quantity) {
-                        throw new ExceededQuota("Quota of " + canonicalName + " for tenant +" + tenant.getName() + "(" + tenantId + ") Exceeded , max is " + quantity + " actual is " + val);
+
+                    if (val > allowed) {
+                        throw new ExceededQuota("Quota of " + canonicalName + " for tenant +" + tenant.getName() + "(" + tenantId + ") Exceeded , max is " + allowed + " actual is " + val);
                     }
                 } catch (ExecutionException e) {
-                    logger.log(Level.SEVERE, "failed checking current quantity", e);
+                    logger.error( "failed checking current quantity", e);
                 }
             }
         }
+    }
+
+    @Async
+    @EventListener
+    public void updateLicensingCache(QuotaLimitation quotaLimitation){
+        quotaLimitationCache.compute(quotaLimitation.getClazz().getCanonicalName(), (s, existing) -> existing==null||existing.getQuota() < quotaLimitation.getQuota()?existing:quotaLimitation);
     }
 
 
