@@ -100,7 +100,7 @@ public class LicenseEnforcer implements ServicePlugin {
     @Async
     @EventListener
     public void updateLicensingCache(QuotaLimitation quotaLimitation){
-        quotaLimitationCache.compute(quotaLimitation.getClazz().getCanonicalName(), (s, existing) -> existing==null||existing.getQuota() < quotaLimitation.getQuota()?existing:quotaLimitation);
+        quotaLimitationCache.compute(quotaLimitation.getClazz().getCanonicalName(), (s, existing) -> existing==null||existing.getQuota() > quotaLimitation.getQuota()?quotaLimitation:existing);
     }
 
 
