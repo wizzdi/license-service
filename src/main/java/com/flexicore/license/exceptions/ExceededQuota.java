@@ -1,38 +1,19 @@
 package com.flexicore.license.exceptions;
 
-import javax.ws.rs.ForbiddenException;
-import javax.ws.rs.core.Response;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
-public class ExceededQuota extends ForbiddenException {
+public class ExceededQuota extends ResponseStatusException {
 
     public ExceededQuota() {
+        super(HttpStatus.FORBIDDEN);
     }
 
-    public ExceededQuota(String message) {
-        super(message);
+    public ExceededQuota(String reason) {
+        super(HttpStatus.FORBIDDEN, reason);
     }
 
-    public ExceededQuota(Response response) {
-        super(response);
-    }
-
-    public ExceededQuota(String message, Response response) {
-        super(message, response);
-    }
-
-    public ExceededQuota(Throwable cause) {
-        super(cause);
-    }
-
-    public ExceededQuota(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public ExceededQuota(Response response, Throwable cause) {
-        super(response, cause);
-    }
-
-    public ExceededQuota(String message, Response response, Throwable cause) {
-        super(message, response, cause);
+    public ExceededQuota( String reason, Throwable cause) {
+        super(HttpStatus.FORBIDDEN, reason, cause);
     }
 }

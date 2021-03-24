@@ -1,10 +1,6 @@
 package com.flexicore.license.service;
 
 
-import com.flexicore.annotations.plugins.PluginInfo;
-import com.flexicore.events.PluginsLoadedEvent;
-import com.flexicore.interfaces.Plugin;
-import com.flexicore.interfaces.ServicePlugin;
 import com.flexicore.license.annotations.HasFeature;
 import com.flexicore.license.annotations.HasFeatures;
 import com.flexicore.license.model.LicensingFeature;
@@ -13,7 +9,8 @@ import com.flexicore.license.request.LicensingFeatureCreate;
 import com.flexicore.license.request.LicensingFeatureFiltering;
 import com.flexicore.license.request.LicensingProductCreate;
 import com.flexicore.license.request.LicensingProductFiltering;
-import com.flexicore.request.BaseclassCreate;
+import com.wizzdi.flexicore.boot.base.events.PluginsLoadedEvent;
+import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import org.pf4j.Extension;
 import org.pf4j.PluginManager;
 import org.slf4j.Logger;
@@ -24,23 +21,22 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Extension
-@PluginInfo(version = 1)
+
 @Component
-public class LicenseScanner implements ServicePlugin {
+public class LicenseScanner implements Plugin {
 
 
     private static final Logger logger= LoggerFactory.getLogger(LicenseScanner.class);
     @Autowired
-    @PluginInfo(version = 1)
+
     private LicensingFeatureService featureService;
     @Autowired
-    @PluginInfo(version = 1)
+
     private LicensingProductService licensingProductService;
 
     @Autowired

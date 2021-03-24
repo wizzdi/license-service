@@ -1,49 +1,98 @@
 package com.flexicore.license.data;
 
-import com.flexicore.annotations.plugins.PluginInfo;
-import org.pf4j.Extension;
-import org.springframework.stereotype.Component;
-import com.flexicore.interfaces.AbstractRepositoryPlugin;
-import com.flexicore.interfaces.ServicePlugin;
-import com.flexicore.model.QueryInformationHolder;
 import com.flexicore.license.model.LicenseRequestToFeature;
 import com.flexicore.license.request.LicenseRequestToFeatureFiltering;
-import com.flexicore.security.SecurityContext;
+import com.flexicore.model.Baseclass;
+import com.flexicore.model.Basic;
+import com.flexicore.security.SecurityContextBase;
+import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
+import com.wizzdi.flexicore.security.data.BasicRepository;
+import org.pf4j.Extension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.*;
+import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Component
-@PluginInfo(version=1)
+
 @Extension
-public class LicenseRequestToFeatureRepository extends AbstractRepositoryPlugin implements ServicePlugin {
+public class LicenseRequestToFeatureRepository implements Plugin {
+	@PersistenceContext
+	private EntityManager em;
+	@Autowired
+	private LicenseRequestToEntityRepository licenseRequestToEntityRepository;
 
 
-    public List<LicenseRequestToFeature> listAllLicenseRequestToFeatures(LicenseRequestToFeatureFiltering licenseRequestToFeatureFiltering, SecurityContext securityContext) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<LicenseRequestToFeature> q = cb.createQuery(LicenseRequestToFeature.class);
-        Root<LicenseRequestToFeature> r = q.from(LicenseRequestToFeature.class);
-        List<Predicate> preds = new ArrayList<>();
-        addLicenseRequestToFeaturesPredicates(licenseRequestToFeatureFiltering,r,cb,preds);
-        QueryInformationHolder<LicenseRequestToFeature> queryInformationHolder = new QueryInformationHolder<>(licenseRequestToFeatureFiltering,LicenseRequestToFeature.class, securityContext);
-        return getAllFiltered(queryInformationHolder, preds, cb, q, r);
-    }
+	public List<LicenseRequestToFeature> listAllLicenseRequestToFeatures(LicenseRequestToFeatureFiltering licenseRequestToFeatureFiltering, SecurityContextBase securityContextBase) {
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<LicenseRequestToFeature> q = cb.createQuery(LicenseRequestToFeature.class);
+		Root<LicenseRequestToFeature> r = q.from(LicenseRequestToFeature.class);
+		List<Predicate> preds = new ArrayList<>();
+		addLicenseRequestToFeaturesPredicates(licenseRequestToFeatureFiltering, cb, q, r, preds, securityContextBase);
+		q.select(r).where(preds.toArray(Predicate[]::new));
+		TypedQuery<LicenseRequestToFeature> query = em.createQuery(q);
+		BasicRepository.addPagination(licenseRequestToFeatureFiltering, query);
+		return query.getResultList();
+	}
 
-    public static <T extends LicenseRequestToFeature> void addLicenseRequestToFeaturesPredicates(LicenseRequestToFeatureFiltering licenseRequestToFeatureFiltering, Root<T> r,  CriteriaBuilder cb, List<Predicate> preds) {
-        LicenseRequestToEntityRepository.addLicenseRequestToEntitiesPredicates(licenseRequestToFeatureFiltering,r,cb,preds);
-    }
+	public <T extends LicenseRequestToFeature> void addLicenseRequestToFeaturesPredicates(LicenseRequestToFeatureFiltering licenseRequestToFeatureFiltering, CriteriaBuilder cb, CommonAbstractCriteria q, From<?, T> r, List<Predicate> preds, SecurityContextBase securityContextBase) {
+		licenseRequestToEntityRepository.addLicenseRequestToEntitiesPredicates(licenseRequestToFeatureFiltering, cb, q, r, preds, securityContextBase);
+	}
 
-    public long countAllLicenseRequestToFeatures(LicenseRequestToFeatureFiltering licenseRequestToFeatureFiltering, SecurityContext securityContext) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<Long> q = cb.createQuery(Long.class);
-        Root<LicenseRequestToFeature> r = q.from(LicenseRequestToFeature.class);
-        List<Predicate> preds = new ArrayList<>();
-        addLicenseRequestToFeaturesPredicates(licenseRequestToFeatureFiltering,r,cb,preds);
-        QueryInformationHolder<LicenseRequestToFeature> queryInformationHolder = new QueryInformationHolder<>(licenseRequestToFeatureFiltering,LicenseRequestToFeature.class, securityContext);
-        return countAllFiltered(queryInformationHolder, preds, cb, q, r);
-    }
+	public long countAllLicenseRequestToFeatures(LicenseRequestToFeatureFiltering licenseRequestToFeatureFiltering, SecurityContextBase securityContextBase) {
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<Long> q = cb.createQuery(Long.class);
+		Root<LicenseRequestToFeature> r = q.from(LicenseRequestToFeature.class);
+		List<Predicate> preds = new ArrayList<>();
+		addLicenseRequestToFeaturesPredicates(licenseRequestToFeatureFiltering, cb, q, r, preds, securityContextBase);
+		q.select(cb.count(r)).where(preds.toArray(Predicate[]::new));
+		TypedQuery<Long> query = em.createQuery(q);
+		return query.getSingleResult();
+	}
+
+	public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {
+		return licenseRequestToEntityRepository.listByIds(c, ids, securityContext);
+	}
+
+	public <T extends Baseclass> T getByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {
+		return licenseRequestToEntityRepository.getByIdOrNull(id, c, securityContext);
+	}
+
+	public <D extends Basic, E extends Baseclass, T extends D> T getByIdOrNull(String id, Class<T> c, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+		return licenseRequestToEntityRepository.getByIdOrNull(id, c, baseclassAttribute, securityContext);
+	}
+
+	public <D extends Basic, E extends Baseclass, T extends D> List<T> listByIds(Class<T> c, Set<String> ids, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+		return licenseRequestToEntityRepository.listByIds(c, ids, baseclassAttribute, securityContext);
+	}
+
+	public <D extends Basic, T extends D> List<T> findByIds(Class<T> c, Set<String> ids, SingularAttribute<D, String> idAttribute) {
+		return licenseRequestToEntityRepository.findByIds(c, ids, idAttribute);
+	}
+
+	public <T extends Basic> List<T> findByIds(Class<T> c, Set<String> requested) {
+		return licenseRequestToEntityRepository.findByIds(c, requested);
+	}
+
+	public <T> T findByIdOrNull(Class<T> type, String id) {
+		return licenseRequestToEntityRepository.findByIdOrNull(type, id);
+	}
+
+	@Transactional
+	public void merge(Object base) {
+		licenseRequestToEntityRepository.merge(base);
+	}
+
+	@Transactional
+	public void massMerge(List<?> toMerge) {
+		licenseRequestToEntityRepository.massMerge(toMerge);
+	}
 }

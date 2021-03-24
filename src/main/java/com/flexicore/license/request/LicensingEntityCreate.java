@@ -1,12 +1,12 @@
 package com.flexicore.license.request;
 
 
-import com.flexicore.request.BaseclassCreate;
+import com.wizzdi.flexicore.security.request.BasicCreate;
 
 /**
  * Created by Asaf on 17/10/2016.
  */
-public class LicensingEntityCreate extends BaseclassCreate {
+public class LicensingEntityCreate extends BasicCreate {
 
     private String canonicalName;
 

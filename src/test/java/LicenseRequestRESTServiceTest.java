@@ -1,10 +1,10 @@
-import com.flexicore.data.jsoncontainers.PaginationResponse;
+import com.wizzdi.flexicore.security.response.PaginationResponse;
 import com.flexicore.init.FlexiCoreApplication;
 import com.flexicore.license.model.LicenseRequest;
 import com.flexicore.license.request.LicenseRequestCreate;
 import com.flexicore.license.request.LicenseRequestFiltering;
 import com.flexicore.license.request.LicenseRequestUpdate;
-import com.flexicore.model.Tenant;
+import com.flexicore.model.SecurityTenant;
 import com.flexicore.request.AuthenticationRequest;
 import com.flexicore.request.TenantFilter;
 import com.flexicore.response.AuthenticationResponse;
@@ -52,13 +52,13 @@ public class LicenseRequestRESTServiceTest {
     @Order(1)
     public void testLicenseRequestCreate() {
         String name = UUID.randomUUID().toString();
-        ParameterizedTypeReference<PaginationResponse<Tenant>> t=new ParameterizedTypeReference<PaginationResponse<Tenant>>() {};
+        ParameterizedTypeReference<PaginationResponse<SecurityTenant>> t=new ParameterizedTypeReference<PaginationResponse<SecurityTenant>>() {};
 
-        ResponseEntity<PaginationResponse<Tenant>> tenantResponse = this.restTemplate.exchange("/FlexiCore/rest/tenant/getAllTenants", HttpMethod.POST, new HttpEntity<>(new TenantFilter()), t);
+        ResponseEntity<PaginationResponse<SecurityTenant>> tenantResponse = this.restTemplate.exchange("/FlexiCore/rest/tenant/getAllTenants", HttpMethod.POST, new HttpEntity<>(new TenantFilter()), t);
         Assertions.assertEquals(200, tenantResponse.getStatusCodeValue());
-        PaginationResponse<Tenant> body = tenantResponse.getBody();
+        PaginationResponse<SecurityTenant> body = tenantResponse.getBody();
         Assertions.assertNotNull(body);
-        List<Tenant> tenants = body.getList();
+        List<SecurityTenant> tenants = body.getList();
         Assertions.assertFalse(tenants.isEmpty());
         LicenseRequestCreate request = new LicenseRequestCreate()
                 .setLicensedTenantId(tenants.get(0).getId())

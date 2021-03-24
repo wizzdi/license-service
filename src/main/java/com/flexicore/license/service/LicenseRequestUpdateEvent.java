@@ -1,11 +1,11 @@
 package com.flexicore.license.service;
 
 import com.flexicore.license.model.LicenseRequest;
-import com.flexicore.security.SecurityContext;
+import com.flexicore.security.SecurityContextBase;
 
 public class LicenseRequestUpdateEvent {
     private LicenseRequest licenseRequest;
-    private SecurityContext securityContext;
+    private SecurityContextBase securityContextBase;
 
     public LicenseRequest getLicenseRequest() {
         return licenseRequest;
@@ -16,12 +16,12 @@ public class LicenseRequestUpdateEvent {
         return (T) this;
     }
 
-    public SecurityContext getSecurityContext() {
-        return securityContext;
+    public SecurityContextBase getSecurityContextBase() {
+        return securityContextBase;
     }
 
-    public <T extends LicenseRequestUpdateEvent> T setSecurityContext(SecurityContext securityContext) {
-        this.securityContext = securityContext;
+    public <T extends LicenseRequestUpdateEvent> T setSecurityContextBase(SecurityContextBase securityContextBase) {
+        this.securityContextBase = securityContextBase;
         return (T) this;
     }
 }

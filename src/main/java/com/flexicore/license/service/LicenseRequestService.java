@@ -2,9 +2,12 @@ package com.flexicore.license.service;
 
 
 import com.flexicore.license.data.LicenseRequestRepository;
-import com.flexicore.data.jsoncontainers.ObjectMapperContextResolver;
-import com.flexicore.data.jsoncontainers.PaginationResponse;
-import com.flexicore.interfaces.ServicePlugin;
+
+import com.wizzdi.flexicore.file.model.FileResource;
+import com.wizzdi.flexicore.security.response.PaginationResponse;
+import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
+import com.wizzdi.flexicore.file.service.FileResourceService;
+import com.wizzdi.flexicore.security.service.BasicService;
 import com.flexicore.license.holders.LicenseHolder;
 import com.flexicore.license.holders.RequestToLicenseEntityHolder;
 import com.flexicore.license.holders.UpdateLicensingCache;
@@ -14,12 +17,9 @@ import com.flexicore.license.request.LicenseRequestToEntityFiltering;
 import com.flexicore.license.request.LicenseRequestUpdate;
 import com.flexicore.model.*;
 import com.flexicore.license.model.*;
-import com.flexicore.request.FileResourceCreate;
 
-import com.flexicore.security.SecurityContext;
-import com.flexicore.service.BaseclassNewService;
-import com.flexicore.service.EncryptionService;
-import com.flexicore.service.FileResourceService;
+import com.flexicore.security.SecurityContextBase;
+
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
@@ -29,6 +29,9 @@ import com.google.crypto.tink.KeysetHandle;
 import com.google.crypto.tink.PublicKeyVerify;
 import com.google.crypto.tink.config.TinkConfig;
 import com.google.crypto.tink.signature.PublicKeyVerifyFactory;
+
+import com.wizzdi.flexicore.security.service.BaseclassService;
+
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,10 +39,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.pf4j.Extension;
-import com.flexicore.annotations.plugins.PluginInfo;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 
+import org.springframework.context.event.EventListener;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import javax.persistence.metamodel.SingularAttribute;
 import javax.ws.rs.BadRequestException;
 import java.io.File;
 import java.io.IOException;
@@ -57,10 +64,10 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 
-@PluginInfo(version=1)
+
 @Extension
 @Component
-public class LicenseRequestService implements ServicePlugin {
+public class LicenseRequestService implements Plugin {
 
     private static List<String> cachedMacAdresses = null;
     private static Queue<String> deviceSerialNumbers = new LinkedBlockingQueue<>();
@@ -69,13 +76,13 @@ public class LicenseRequestService implements ServicePlugin {
 
 
     @Autowired
-    @PluginInfo(version = 1)
+
     private LicenseRequestRepository repository;
 
     @Autowired
-    private BaseclassNewService baseclassNewService;
+    private BasicService basicService;
     @Autowired
-    @PluginInfo(version = 1)
+
     private LicenseRequestToEntityService licenseRequestToEntityService;
 
     @Autowired
@@ -96,16 +103,44 @@ public class LicenseRequestService implements ServicePlugin {
     private ApplicationEventPublisher updateLicensingCacheEvent;
 
 
-    public <T extends Baseclass> T getByIdOrNull(String id, Class<T> c, List<String> batchString, SecurityContext securityContext) {
-        return repository.getByIdOrNull(id, c, batchString, securityContext);
-    }
-
-
-    public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContext securityContext) {
+   public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {
         return repository.listByIds(c, ids, securityContext);
     }
 
-    public LicenseRequest createLicenseRequest(LicenseRequestCreate licenseRequestCreate, SecurityContext securityContext) {
+    public <T extends Baseclass> T getByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {
+        return repository.getByIdOrNull(id, c, securityContext);
+    }
+
+    public <D extends Basic, E extends Baseclass, T extends D> T getByIdOrNull(String id, Class<T> c, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+        return repository.getByIdOrNull(id, c, baseclassAttribute, securityContext);
+    }
+
+    public <D extends Basic, E extends Baseclass, T extends D> List<T> listByIds(Class<T> c, Set<String> ids, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+        return repository.listByIds(c, ids, baseclassAttribute, securityContext);
+    }
+
+    public <D extends Basic, T extends D> List<T> findByIds(Class<T> c, Set<String> ids, SingularAttribute<D, String> idAttribute) {
+        return repository.findByIds(c, ids, idAttribute);
+    }
+
+    public <T extends Basic> List<T> findByIds(Class<T> c, Set<String> requested) {
+        return repository.findByIds(c, requested);
+    }
+
+    public <T> T findByIdOrNull(Class<T> type, String id) {
+        return repository.findByIdOrNull(type, id);
+    }
+
+    @Transactional
+    public void merge(Object base) {
+        repository.merge(base);
+    }
+
+    @Transactional
+    public void massMerge(List<?> toMerge) {
+        repository.massMerge(toMerge);
+    }
+    public LicenseRequest createLicenseRequest(LicenseRequestCreate licenseRequestCreate, SecurityContextBase securityContextBase) {
         List<Object> toMerge=new ArrayList<>();
         String macAddress = null;
         try {
@@ -117,7 +152,7 @@ public class LicenseRequestService implements ServicePlugin {
             logger.error("failed getting mac addresses", e);
         }
         licenseRequestCreate.setMacAddress(macAddress);
-        LicenseRequest licenseRequest = createLicenseRequestNoMerge(licenseRequestCreate, securityContext);
+        LicenseRequest licenseRequest = createLicenseRequestNoMerge(licenseRequestCreate, securityContextBase);
         List<LicenseRequest> otherRequestsForTenant=listAllLicenseRequests(new LicenseRequestFiltering().setRelatedTenant(Collections.singletonList(licenseRequestCreate.getLicensedTenant())),null);
         for (LicenseRequest request : otherRequestsForTenant) {
             request.setSoftDelete(true);
@@ -125,25 +160,26 @@ public class LicenseRequestService implements ServicePlugin {
         }
         toMerge.add(licenseRequest);
         repository.massMerge(toMerge);
-        updateLicenseFile(licenseRequest, securityContext);
+        updateLicenseFile(licenseRequest, securityContextBase);
         return licenseRequest;
     }
 
     @EventListener
     public void licenseRequestUpdated(LicenseRequestUpdateEvent licenseRequest) {
         logger.info("License request updated event");
-        updateLicenseFile(licenseRequest.getLicenseRequest(), licenseRequest.getSecurityContext());
+        updateLicenseFile(licenseRequest.getLicenseRequest(), licenseRequest.getSecurityContextBase());
         updateLicensingCacheEvent.publishEvent(new UpdateLicensingCache());
     }
 
-    public LicenseRequest createLicenseRequestNoMerge(LicenseRequestCreate licenseRequestCreate, SecurityContext securityContext) {
-        LicenseRequest licenseRequest = new LicenseRequest(licenseRequestCreate.getName(), securityContext);
+    public LicenseRequest createLicenseRequestNoMerge(LicenseRequestCreate licenseRequestCreate, SecurityContextBase securityContextBase) {
+        LicenseRequest licenseRequest = new LicenseRequest();
+        BaseclassService.createSecurityObjectNoMerge(licenseRequest,securityContextBase);
         updateLicenseRequestNoMerge(licenseRequest, licenseRequestCreate);
         return licenseRequest;
     }
 
     private boolean updateLicenseRequestNoMerge(LicenseRequest licenseRequest, LicenseRequestCreate licenseRequestCreate) {
-        boolean update = baseclassNewService.updateBaseclassNoMerge(licenseRequestCreate, licenseRequest);
+        boolean update = basicService.updateBasicNoMerge(licenseRequestCreate, licenseRequest);
         if (licenseRequestCreate.getMacAddress() != null && !licenseRequestCreate.getMacAddress().equals(licenseRequest.getMacAddress())) {
             licenseRequest.setMacAddress(licenseRequestCreate.getMacAddress());
             update = true;
@@ -174,32 +210,32 @@ public class LicenseRequestService implements ServicePlugin {
     }
 
 
-    public LicenseRequest updateLicenseRequest(LicenseRequestUpdate licenseRequestUpdate, SecurityContext securityContext) {
+    public LicenseRequest updateLicenseRequest(LicenseRequestUpdate licenseRequestUpdate, SecurityContextBase securityContextBase) {
         LicenseRequest licenseRequest = licenseRequestUpdate.getLicenseRequest();
         if (updateLicenseRequestNoMerge(licenseRequest, licenseRequestUpdate)) {
             repository.merge(licenseRequest);
-            updateLicenseFile(licenseRequest, securityContext);
+            updateLicenseFile(licenseRequest, securityContextBase);
 
         }
         return licenseRequest;
     }
 
-    public List<LicenseRequest> listAllLicenseRequests(LicenseRequestFiltering licenseRequestFiltering, SecurityContext securityContext) {
-        return repository.listAllLicenseRequests(licenseRequestFiltering, securityContext);
+    public List<LicenseRequest> listAllLicenseRequests(LicenseRequestFiltering licenseRequestFiltering, SecurityContextBase securityContextBase) {
+        return repository.listAllLicenseRequests(licenseRequestFiltering, securityContextBase);
     }
 
-    public void validate(LicenseRequestCreate licenseRequestCreate, SecurityContext securityContext) {
-        baseclassNewService.validate(licenseRequestCreate, securityContext);
+    public void validate(LicenseRequestCreate licenseRequestCreate, SecurityContextBase securityContextBase) {
+        basicService.validate(licenseRequestCreate, securityContextBase);
         String licenseId = licenseRequestCreate.getLicenseId();
-        FileResource license = licenseId != null ? getByIdOrNull(licenseId, FileResource.class, null, securityContext) : null;
+        FileResource license = licenseId != null ? getByIdOrNull(licenseId, FileResource.class, null, securityContextBase) : null;
         if (license == null && licenseId != null) {
-            throw new BadRequestException("No FileResource with id " + licenseId);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No FileResource with id " + licenseId);
         }
         licenseRequestCreate.setLicense(license);
         String licensedTenantId = licenseRequestCreate.getLicensedTenantId();
-        Tenant tenant = licensedTenantId != null ? getByIdOrNull(licensedTenantId, Tenant.class, null, securityContext) : null;
+        SecurityTenant tenant = licensedTenantId != null ? getByIdOrNull(licensedTenantId, SecurityTenant.class, null, securityContextBase) : null;
         if (licensedTenantId!=null&&tenant == null) {
-            throw new BadRequestException("No Tenant with id " + licensedTenantId);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No SecurityTenant with id " + licensedTenantId);
         }
         licenseRequestCreate.setLicensedTenant(tenant);
 
@@ -272,7 +308,7 @@ public class LicenseRequestService implements ServicePlugin {
 
     }
 
-    public boolean isFeatureLicensed(User user, List<Tenant> tenants, LicensingFeature feature) {
+    public boolean isFeatureLicensed(SecurityUser user, List<SecurityTenant> tenants, LicensingFeature feature) {
         Instant instant = Instant.now();
         OffsetDateTime now = OffsetDateTime.now();
 
@@ -323,12 +359,12 @@ public class LicenseRequestService implements ServicePlugin {
         return false;
     }
 
-    private List<LicenseRequest> getSuitableProductLicenseRequests(List<Tenant> tenants, LicensingProduct product, Collection<String> macs, Collection<String> deviceSerialNumbers) {
+    private List<LicenseRequest> getSuitableProductLicenseRequests(List<SecurityTenant> tenants, LicensingProduct product, Collection<String> macs, Collection<String> deviceSerialNumbers) {
         LicenseRequestFiltering licenseRequestFiltering = new LicenseRequestFiltering()
                 .setSigned(true)
                 .setExpirationDateAfter(OffsetDateTime.now())
                 .setLicensingProducts(Collections.singletonList(product))
-                .setTenantIds(tenants.parallelStream().map(f -> new TenantIdFiltering().setId(f.getId())).collect(Collectors.toList()));
+                .setRelatedTenantsIds(tenants.parallelStream().map(f ->f.getId()).collect(Collectors.toSet()));
         List<LicenseRequest> signed = listAllLicenseRequests(licenseRequestFiltering, null);
         List<LicenseRequest> suitable = new ArrayList<>();
         for (LicenseRequest licenseRequest : signed) {
@@ -340,12 +376,12 @@ public class LicenseRequestService implements ServicePlugin {
     }
 
 
-    private List<LicenseRequest> getSuitableFeatureLicenseRequests(List<Tenant> tenants, LicensingFeature feature, Collection<String> macs, Collection<String> deviceSerialNumbers) {
+    private List<LicenseRequest> getSuitableFeatureLicenseRequests(List<SecurityTenant> tenants, LicensingFeature feature, Collection<String> macs, Collection<String> deviceSerialNumbers) {
         LicenseRequestFiltering licenseRequestFiltering = new LicenseRequestFiltering()
                 .setSigned(true)
                 .setExpirationDateAfter(OffsetDateTime.now())
                 .setLicensingFeatures(Collections.singletonList(feature))
-                .setTenantIds(tenants.parallelStream().map(f -> new TenantIdFiltering().setId(f.getId())).collect(Collectors.toList()));
+                .setRelatedTenantsIds(tenants.parallelStream().map(f ->f.getId()).collect(Collectors.toSet()));
         List<LicenseRequest> signed = listAllLicenseRequests(licenseRequestFiltering, null);
         List<LicenseRequest> suitable = new ArrayList<>();
         for (LicenseRequest licenseRequest : signed) {
@@ -391,17 +427,17 @@ public class LicenseRequestService implements ServicePlugin {
     }
 
 
-    public void updateLicenseFile(LicenseRequest licenseRequest, SecurityContext securityContext) {
+    public void updateLicenseFile(LicenseRequest licenseRequest, SecurityContextBase securityContextBase) {
         LicenseHolder licenseHolder = getLicenseHolder(licenseRequest);
         FileResource fileResource = licenseRequest.getRequestFile();
-        File file = fileResource != null ? new File(fileResource.getFullPath()) : new File(FileResourceService.generateNewPathForFileResource(licenseRequest.getId() + ".req", securityContext.getUser()));
+        File file = fileResource != null ? new File(fileResource.getFullPath()) : new File(FileResourceService.generateNewPathForFileResource(licenseRequest.getId() + ".req", securityContextBase.getUser()));
         try {
             ObjectMapperContextResolver.getDefaultMapper().writeValue(file, licenseHolder);
             FileResourceCreate requestFile = new FileResourceCreate()
                     .setFullPath(file.getPath())
                     .setName("requestFile");
             if (fileResource == null) {
-                fileResource = fileResourceService.createNoMerge(requestFile, securityContext);
+                fileResource = fileResourceService.createNoMerge(requestFile, securityContextBase);
                 licenseRequest.setRequestFile(fileResource);
             }
             repository.massMerge(Arrays.asList(fileResource, licenseRequest));
@@ -428,20 +464,20 @@ public class LicenseRequestService implements ServicePlugin {
         return new LicenseHolder(licenseRequest,links);
     }
 
-    public void validate(LicenseRequestFiltering licenseRequestFiltering, SecurityContext securityContext) {
-        baseclassNewService.validateFilter(licenseRequestFiltering, securityContext);
+    public void validate(LicenseRequestFiltering licenseRequestFiltering, SecurityContextBase securityContextBase) {
+        basicService.validate(licenseRequestFiltering, securityContextBase);
     }
 
-    public PaginationResponse<LicenseRequest> getAllLicenseRequests(LicenseRequestFiltering licenseRequestFiltering, SecurityContext securityContext) {
-        List<LicenseRequest> list = listAllLicenseRequests(licenseRequestFiltering, securityContext);
-        long count = repository.countAllLicenseRequests(licenseRequestFiltering, securityContext);
+    public PaginationResponse<LicenseRequest> getAllLicenseRequests(LicenseRequestFiltering licenseRequestFiltering, SecurityContextBase securityContextBase) {
+        List<LicenseRequest> list = listAllLicenseRequests(licenseRequestFiltering, securityContextBase);
+        long count = repository.countAllLicenseRequests(licenseRequestFiltering, securityContextBase);
         return new PaginationResponse<>(list, licenseRequestFiltering, count);
     }
 
 
     public void validateCreate(LicenseRequestCreate licenseRequestCreate) {
         if(licenseRequestCreate.getLicensedTenant()==null){
-            throw new BadRequestException("Tenant Must be provided");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"SecurityTenant Must be provided");
         }
 
     }

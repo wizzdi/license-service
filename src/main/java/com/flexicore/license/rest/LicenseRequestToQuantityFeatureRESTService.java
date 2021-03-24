@@ -10,15 +10,15 @@ import com.flexicore.annotations.IOperation;
 import com.flexicore.annotations.IOperation.Access;
 import com.flexicore.annotations.OperationsInside;
 import com.flexicore.annotations.Protected;
-import com.flexicore.annotations.plugins.PluginInfo;
+
 import org.pf4j.Extension;
-import com.flexicore.data.jsoncontainers.PaginationResponse;
+import com.wizzdi.flexicore.security.response.PaginationResponse;
 import com.flexicore.interfaces.RestServicePlugin;
 import com.flexicore.license.model.LicenseRequestToQuantityFeature;
 import com.flexicore.license.request.LicenseRequestToQuantityFeatureCreate;
 import com.flexicore.license.request.LicenseRequestToQuantityFeatureFiltering;
 import com.flexicore.license.request.LicenseRequestToQuantityFeatureUpdate;
-import com.flexicore.security.SecurityContext;
+import com.flexicore.security.SecurityContextBase;
 import com.flexicore.license.service.LicenseRequestToQuantityFeatureService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +37,7 @@ import java.util.logging.Logger;
 @OperationsInside
 @Protected
 @Extension
-@PluginInfo(version=1)
+
 @Tag(name = "License")
 
 
@@ -45,7 +45,7 @@ public class LicenseRequestToQuantityFeatureRESTService implements RestServicePl
 
 
     @Autowired
-    @PluginInfo(version = 1)
+
     private LicenseRequestToQuantityFeatureService licenseRequestToQuantityFeatureService;
 
 
@@ -55,9 +55,9 @@ public class LicenseRequestToQuantityFeatureRESTService implements RestServicePl
     @Produces(MediaType.APPLICATION_JSON)
     @IOperation(access = Access.allow, Name = "getAllLicenseRequestToQuantityFeatures", Description = "lists LicenseRequestToQuantityFeatures", relatedClazzes = {LicenseRequestToQuantityFeature.class})
     public PaginationResponse<LicenseRequestToQuantityFeature> getAllLicenseRequestToQuantityFeatures(@HeaderParam("authenticationkey") String authenticationkey
-            , LicenseRequestToQuantityFeatureFiltering licenseRequestToQuantityFeatureFiltering, @Context SecurityContext securityContext) {
-        licenseRequestToQuantityFeatureService.validate(licenseRequestToQuantityFeatureFiltering, securityContext);
-        return licenseRequestToQuantityFeatureService.getAllLicenseRequestToQuantityFeatures(licenseRequestToQuantityFeatureFiltering, securityContext);
+            , LicenseRequestToQuantityFeatureFiltering licenseRequestToQuantityFeatureFiltering, @Context SecurityContextBase securityContextBase) {
+        licenseRequestToQuantityFeatureService.validate(licenseRequestToQuantityFeatureFiltering, securityContextBase);
+        return licenseRequestToQuantityFeatureService.getAllLicenseRequestToQuantityFeatures(licenseRequestToQuantityFeatureFiltering, securityContextBase);
 
     }
 
@@ -69,9 +69,9 @@ public class LicenseRequestToQuantityFeatureRESTService implements RestServicePl
     @Produces(MediaType.APPLICATION_JSON)
     @IOperation(access = Access.allow, Name = "Creates LicenseRequestToQuantityFeature", Description = "Creates LicenseRequestToQuantityFeature", relatedClazzes = {LicenseRequestToQuantityFeature.class})
     public LicenseRequestToQuantityFeature createLicenseRequestToQuantityFeature(@HeaderParam("authenticationkey") String authenticationkey
-            , LicenseRequestToQuantityFeatureCreate licenseRequestToQuantityFeatureCreate, @Context SecurityContext securityContext) {
-        licenseRequestToQuantityFeatureService.validate(licenseRequestToQuantityFeatureCreate, securityContext);
-        return licenseRequestToQuantityFeatureService.createLicenseRequestToQuantityFeature(licenseRequestToQuantityFeatureCreate, securityContext);
+            , LicenseRequestToQuantityFeatureCreate licenseRequestToQuantityFeatureCreate, @Context SecurityContextBase securityContextBase) {
+        licenseRequestToQuantityFeatureService.validate(licenseRequestToQuantityFeatureCreate, securityContextBase);
+        return licenseRequestToQuantityFeatureService.createLicenseRequestToQuantityFeature(licenseRequestToQuantityFeatureCreate, securityContextBase);
 
     }
 
@@ -81,15 +81,15 @@ public class LicenseRequestToQuantityFeatureRESTService implements RestServicePl
     @Produces(MediaType.APPLICATION_JSON)
     @IOperation(access = Access.allow, Name = "Updates LicenseRequestToQuantityFeature", Description = "Updates LicenseRequestToQuantityFeature", relatedClazzes = {LicenseRequestToQuantityFeature.class})
     public LicenseRequestToQuantityFeature updateLicenseRequestToQuantityFeature(@HeaderParam("authenticationkey") String authenticationkey
-            , LicenseRequestToQuantityFeatureUpdate licenseRequestToQuantityFeatureUpdate, @Context SecurityContext securityContext) {
+            , LicenseRequestToQuantityFeatureUpdate licenseRequestToQuantityFeatureUpdate, @Context SecurityContextBase securityContextBase) {
         String id=licenseRequestToQuantityFeatureUpdate.getId();
-        LicenseRequestToQuantityFeature licenseRequestToQuantityFeature=id!=null?licenseRequestToQuantityFeatureService.getByIdOrNull(id,LicenseRequestToQuantityFeature.class,null,securityContext):null;
+        LicenseRequestToQuantityFeature licenseRequestToQuantityFeature=id!=null?licenseRequestToQuantityFeatureService.getByIdOrNull(id,LicenseRequestToQuantityFeature.class,null,securityContextBase):null;
         if(licenseRequestToQuantityFeature==null){
-            throw new BadRequestException("No LicenseRequestToQuantityFeature with id "+id);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No LicenseRequestToQuantityFeature with id "+id);
         }
         licenseRequestToQuantityFeatureUpdate.setLicenseRequestToQuantityFeature(licenseRequestToQuantityFeature);
-        licenseRequestToQuantityFeatureService.validate(licenseRequestToQuantityFeatureUpdate, securityContext);
-        return licenseRequestToQuantityFeatureService.updateLicenseRequestToQuantityFeature(licenseRequestToQuantityFeatureUpdate, securityContext);
+        licenseRequestToQuantityFeatureService.validate(licenseRequestToQuantityFeatureUpdate, securityContextBase);
+        return licenseRequestToQuantityFeatureService.updateLicenseRequestToQuantityFeature(licenseRequestToQuantityFeatureUpdate, securityContextBase);
 
     }
 

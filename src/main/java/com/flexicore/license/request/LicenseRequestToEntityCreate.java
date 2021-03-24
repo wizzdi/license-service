@@ -2,11 +2,11 @@ package com.flexicore.license.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.flexicore.license.model.LicenseRequest;
-import com.flexicore.request.BaseclassCreate;
+import com.wizzdi.flexicore.security.request.BasicCreate;
 
 import java.time.ZonedDateTime;
 
-public class LicenseRequestToEntityCreate extends BaseclassCreate {
+public class LicenseRequestToEntityCreate extends BasicCreate {
     @JsonIgnore
     private ZonedDateTime granted;
     private ZonedDateTime expiration;

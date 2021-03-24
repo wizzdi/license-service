@@ -1,9 +1,6 @@
 package com.flexicore.license.service;
 
 
-import com.flexicore.annotations.plugins.PluginInfo;
-import com.flexicore.events.BaseclassCreated;
-import com.flexicore.interfaces.ServicePlugin;
 import com.flexicore.license.exceptions.ExceededQuota;
 import com.flexicore.license.holders.UpdateLicensingCache;
 import com.flexicore.license.model.LicenseRequest;
@@ -13,12 +10,14 @@ import com.flexicore.license.request.LicenseRequestToQuantityFeatureFiltering;
 import com.flexicore.license.request.QuotaLimitation;
 import com.flexicore.model.Baseclass;
 import com.flexicore.model.ClazzIdFiltering;
-import com.flexicore.model.Tenant;
+import com.flexicore.model.SecurityTenant;
 import com.flexicore.request.BaseclassCountRequest;
 import com.flexicore.response.BaseclassCount;
-import com.flexicore.service.BaseclassService;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
+import com.wizzdi.flexicore.security.events.BasicCreated;
+import com.wizzdi.flexicore.security.service.BasicService;
 import org.pf4j.Extension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,15 +31,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.BiFunction;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 
-@PluginInfo(version = 1)
 @Extension
 @Component
-public class LicenseEnforcer implements ServicePlugin {
+public class LicenseEnforcer implements Plugin {
 
     private static AtomicBoolean init = new AtomicBoolean(false);
 
@@ -59,15 +55,15 @@ public class LicenseEnforcer implements ServicePlugin {
     @Autowired
     private LicenseRequestService licenseRequestService;
     @Autowired
-    private BaseclassService baseclassService;
+    private BasicService basicService;
 
 
     @EventListener
-    public void onBaseclassCreated(BaseclassCreated<Baseclass> baseclassCreated) {
+    public void onBaseclassCreated(BasicCreated<Baseclass> baseclassCreated) {
         Baseclass b = baseclassCreated.getBaseclass();
         if (b.getTenant() != null) {
             String canonicalName = b.getClass().getCanonicalName();
-            Tenant tenant = b.getTenant();
+            SecurityTenant tenant = b.getTenant();
             String tenantId = tenant.getId();
             String key = getKey(tenantId, canonicalName);
             QuotaLimitation quotaLimitation = quotaLimitationCache.get(canonicalName);

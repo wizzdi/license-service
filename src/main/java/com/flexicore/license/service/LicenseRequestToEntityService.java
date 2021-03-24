@@ -2,68 +2,102 @@ package com.flexicore.license.service;
 
 
 import com.flexicore.license.data.LicenseRequestToEntityRepository;
-import com.flexicore.data.jsoncontainers.PaginationResponse;
-import com.flexicore.interfaces.ServicePlugin;
-import com.flexicore.model.Baseclass;
 import com.flexicore.license.model.LicenseRequest;
 import com.flexicore.license.model.LicenseRequestToEntity;
+import com.flexicore.license.model.LicenseRequest_;
 import com.flexicore.license.request.LicenseRequestToEntityCreate;
 import com.flexicore.license.request.LicenseRequestToEntityFiltering;
-import com.flexicore.security.SecurityContext;
-import com.flexicore.service.BaseclassNewService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.flexicore.model.Baseclass;
+import com.flexicore.model.Basic;
+import com.flexicore.security.SecurityContextBase;
+import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
+import com.wizzdi.flexicore.security.response.PaginationResponse;
+import com.wizzdi.flexicore.security.service.BaseclassService;
+import com.wizzdi.flexicore.security.service.BasicService;
 import org.pf4j.Extension;
-import com.flexicore.annotations.plugins.PluginInfo;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
-import javax.ws.rs.BadRequestException;
+import javax.persistence.metamodel.SingularAttribute;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 
-@PluginInfo(version=1)
 @Extension
 @Component
-public class LicenseRequestToEntityService implements ServicePlugin {
+public class LicenseRequestToEntityService implements Plugin {
 
 
     @Autowired
-    @PluginInfo(version = 1)
+
     private LicenseRequestToEntityRepository repository;
 
     @Autowired
-    private BaseclassNewService baseclassNewService;
+    private BasicService basicService;
 
    private Logger logger = Logger.getLogger(getClass().getCanonicalName());
 
 
-    public <T extends Baseclass> T getByIdOrNull(String id, Class<T> c, List<String> batchString, SecurityContext securityContext) {
-        return repository.getByIdOrNull(id, c, batchString, securityContext);
-    }
-
-
-    public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContext securityContext) {
+   public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {
         return repository.listByIds(c, ids, securityContext);
     }
 
-    public LicenseRequestToEntity createLicenseRequestToEntity(LicenseRequestToEntityCreate pluginCreationContainer, SecurityContext securityContext) {
-        LicenseRequestToEntity licenseRequestToEntity = createLicenseRequestToEntityNoMerge(pluginCreationContainer, securityContext);
+    public <T extends Baseclass> T getByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {
+        return repository.getByIdOrNull(id, c, securityContext);
+    }
+
+    public <D extends Basic, E extends Baseclass, T extends D> T getByIdOrNull(String id, Class<T> c, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+        return repository.getByIdOrNull(id, c, baseclassAttribute, securityContext);
+    }
+
+    public <D extends Basic, E extends Baseclass, T extends D> List<T> listByIds(Class<T> c, Set<String> ids, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+        return repository.listByIds(c, ids, baseclassAttribute, securityContext);
+    }
+
+    public <D extends Basic, T extends D> List<T> findByIds(Class<T> c, Set<String> ids, SingularAttribute<D, String> idAttribute) {
+        return repository.findByIds(c, ids, idAttribute);
+    }
+
+    public <T extends Basic> List<T> findByIds(Class<T> c, Set<String> requested) {
+        return repository.findByIds(c, requested);
+    }
+
+    public <T> T findByIdOrNull(Class<T> type, String id) {
+        return repository.findByIdOrNull(type, id);
+    }
+
+    @Transactional
+    public void merge(Object base) {
+        repository.merge(base);
+    }
+
+    @Transactional
+    public void massMerge(List<?> toMerge) {
+        repository.massMerge(toMerge);
+    }
+    public LicenseRequestToEntity createLicenseRequestToEntity(LicenseRequestToEntityCreate pluginCreationContainer, SecurityContextBase securityContextBase) {
+        LicenseRequestToEntity licenseRequestToEntity = createLicenseRequestToEntityNoMerge(pluginCreationContainer, securityContextBase);
         repository.merge(licenseRequestToEntity);
         return licenseRequestToEntity;
 
 
     }
 
-    public LicenseRequestToEntity createLicenseRequestToEntityNoMerge(LicenseRequestToEntityCreate licenseRequestToEntityCreate, SecurityContext securityContext) {
-        LicenseRequestToEntity licenseRequestToEntity = new LicenseRequestToEntity(licenseRequestToEntityCreate.getName(), securityContext);
+    public LicenseRequestToEntity createLicenseRequestToEntityNoMerge(LicenseRequestToEntityCreate licenseRequestToEntityCreate, SecurityContextBase securityContextBase) {
+        LicenseRequestToEntity licenseRequestToEntity = new LicenseRequestToEntity();
+        licenseRequestToEntity.setId(Baseclass.getBase64ID());
         updateLicenseRequestToEntityNoMerge(licenseRequestToEntity, licenseRequestToEntityCreate);
+        BaseclassService.createSecurityObjectNoMerge(licenseRequestToEntity,securityContextBase);
         return licenseRequestToEntity;
     }
 
     public boolean updateLicenseRequestToEntityNoMerge(LicenseRequestToEntity licenseRequestToEntity, LicenseRequestToEntityCreate licenseRequestToEntityCreate) {
-        boolean update = baseclassNewService.updateBaseclassNoMerge(licenseRequestToEntityCreate, licenseRequestToEntity);
+        boolean update = basicService.updateBasicNoMerge(licenseRequestToEntityCreate, licenseRequestToEntity);
         if(licenseRequestToEntityCreate.getDemo()!=null && !licenseRequestToEntityCreate.getDemo().equals(licenseRequestToEntity.isDemo())){
             licenseRequestToEntity.setDemo(licenseRequestToEntityCreate.getDemo());
             update=true;
@@ -90,42 +124,42 @@ public class LicenseRequestToEntityService implements ServicePlugin {
     }
     
 
-    public List<LicenseRequestToEntity> listAllLicenseRequestToEntities(LicenseRequestToEntityFiltering licenseRequestToEntityFiltering, SecurityContext securityContext) {
-        return repository.listAllLicenseRequestToEntities(licenseRequestToEntityFiltering, securityContext);
+    public List<LicenseRequestToEntity> listAllLicenseRequestToEntities(LicenseRequestToEntityFiltering licenseRequestToEntityFiltering, SecurityContextBase securityContextBase) {
+        return repository.listAllLicenseRequestToEntities(licenseRequestToEntityFiltering, securityContextBase);
     }
 
-    public void validate(LicenseRequestToEntityCreate licenseRequestToEntityCreate, SecurityContext securityContext) {
-        baseclassNewService.validate(licenseRequestToEntityCreate, securityContext);
+    public void validate(LicenseRequestToEntityCreate licenseRequestToEntityCreate, SecurityContextBase securityContextBase) {
+        basicService.validate(licenseRequestToEntityCreate, securityContextBase);
         String licenseRequestId=licenseRequestToEntityCreate.getLicenseRequestId();
-        LicenseRequest licenseRequest=licenseRequestId!=null?getByIdOrNull(licenseRequestId,LicenseRequest.class,null,securityContext):null;
+        LicenseRequest licenseRequest=licenseRequestId!=null?getByIdOrNull(licenseRequestId,LicenseRequest.class,null,securityContextBase):null;
         if(licenseRequest==null && licenseRequestId!=null){
-            throw new BadRequestException("No License request with id "+licenseRequestId);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No License request with id "+licenseRequestId);
         }
         licenseRequestToEntityCreate.setLicenseRequest(licenseRequest);
 
     }
 
-    public void validateCreate(LicenseRequestToEntityCreate licenseRequestToEntityCreate, SecurityContext securityContext) {
-        validate(licenseRequestToEntityCreate,securityContext);
+    public void validateCreate(LicenseRequestToEntityCreate licenseRequestToEntityCreate, SecurityContextBase securityContextBase) {
+        validate(licenseRequestToEntityCreate,securityContextBase);
         if((licenseRequestToEntityCreate.getPerpetual()==null || !licenseRequestToEntityCreate.getPerpetual()) && licenseRequestToEntityCreate.getExpiration()==null){
-            throw new BadRequestException("Perpetual or expiration date should be set");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Perpetual or expiration date should be set");
         }
     }
 
-    public void validate(LicenseRequestToEntityFiltering licenseRequestToEntityFiltering, SecurityContext securityContext) {
-        baseclassNewService.validateFilter(licenseRequestToEntityFiltering,securityContext);
+    public void validate(LicenseRequestToEntityFiltering licenseRequestToEntityFiltering, SecurityContextBase securityContextBase) {
+        basicService.validate(licenseRequestToEntityFiltering,securityContextBase);
         Set<String> licenseRequestIds=licenseRequestToEntityFiltering.getLicenseRequestIds();
-        Map<String,LicenseRequest> licenseRequestMap=licenseRequestIds.isEmpty()?new HashMap<>():listByIds(LicenseRequest.class,licenseRequestIds,securityContext).parallelStream().collect(Collectors.toMap(f->f.getId(),f->f));
+        Map<String,LicenseRequest> licenseRequestMap=licenseRequestIds.isEmpty()?new HashMap<>():listByIds(LicenseRequest.class,licenseRequestIds, LicenseRequest_.security,securityContextBase).parallelStream().collect(Collectors.toMap(f->f.getId(), f->f));
         licenseRequestIds.removeAll(licenseRequestMap.keySet());
         if(!licenseRequestIds.isEmpty()){
-            throw new BadRequestException("No License Requests with ids "+licenseRequestIds);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No License Requests with ids "+licenseRequestIds);
         }
         licenseRequestToEntityFiltering.setLicenseRequests(new ArrayList<>(licenseRequestMap.values()));
     }
 
-    public PaginationResponse<LicenseRequestToEntity> getAllLicenseRequestToEntities(LicenseRequestToEntityFiltering licenseRequestToEntityFiltering, SecurityContext securityContext) {
-        List<LicenseRequestToEntity> list = listAllLicenseRequestToEntities(licenseRequestToEntityFiltering, securityContext);
-        long count = repository.countAllLicenseRequestToEntities(licenseRequestToEntityFiltering, securityContext);
+    public PaginationResponse<LicenseRequestToEntity> getAllLicenseRequestToEntities(LicenseRequestToEntityFiltering licenseRequestToEntityFiltering, SecurityContextBase securityContextBase) {
+        List<LicenseRequestToEntity> list = listAllLicenseRequestToEntities(licenseRequestToEntityFiltering, securityContextBase);
+        long count = repository.countAllLicenseRequestToEntities(licenseRequestToEntityFiltering, securityContextBase);
         return new PaginationResponse<>(list, licenseRequestToEntityFiltering, count);
     }
 

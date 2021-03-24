@@ -10,13 +10,13 @@ import com.flexicore.annotations.IOperation;
 import com.flexicore.annotations.IOperation.Access;
 import com.flexicore.annotations.OperationsInside;
 import com.flexicore.annotations.Protected;
-import com.flexicore.annotations.plugins.PluginInfo;
-import com.flexicore.data.jsoncontainers.PaginationResponse;
+
+import com.wizzdi.flexicore.security.response.PaginationResponse;
 import com.flexicore.interfaces.RestServicePlugin;
 import com.flexicore.license.model.LicensingProduct;
 import com.flexicore.license.request.LicensingProductFiltering;
 import com.flexicore.license.service.LicensingProductService;
-import com.flexicore.security.SecurityContext;
+import com.flexicore.security.SecurityContextBase;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +35,7 @@ import java.util.logging.Logger;
 @OperationsInside
 @Protected
 @Extension
-@PluginInfo(version=1)
+
 @Tag(name = "License")
 
 
@@ -43,7 +43,7 @@ public class LicensingProductRESTService implements RestServicePlugin {
 
 
     @Autowired
-    @PluginInfo(version = 1)
+
     private LicensingProductService licensingProductService;
 
 
@@ -53,9 +53,9 @@ public class LicensingProductRESTService implements RestServicePlugin {
     @Produces(MediaType.APPLICATION_JSON)
     @IOperation(access = Access.allow, Name = "getAllLicensingProducts", Description = "lists LicensingProducts", relatedClazzes = {LicensingProduct.class})
     public PaginationResponse<LicensingProduct> getAllLicensingProducts(@HeaderParam("authenticationkey") String authenticationkey
-            , LicensingProductFiltering licensingProductFiltering, @Context SecurityContext securityContext) {
-        licensingProductService.validate(licensingProductFiltering, securityContext);
-        return licensingProductService.getAllLicensingProducts(licensingProductFiltering, securityContext);
+            , LicensingProductFiltering licensingProductFiltering, @Context SecurityContextBase securityContextBase) {
+        licensingProductService.validate(licensingProductFiltering, securityContextBase);
+        return licensingProductService.getAllLicensingProducts(licensingProductFiltering, securityContextBase);
 
     }
 

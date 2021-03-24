@@ -1,49 +1,98 @@
 package com.flexicore.license.data;
 
-import com.flexicore.annotations.plugins.PluginInfo;
-import org.pf4j.Extension;
-import org.springframework.stereotype.Component;
-import com.flexicore.interfaces.AbstractRepositoryPlugin;
-import com.flexicore.interfaces.ServicePlugin;
-import com.flexicore.model.QueryInformationHolder;
 import com.flexicore.license.model.LicensingProduct;
 import com.flexicore.license.request.LicensingProductFiltering;
-import com.flexicore.security.SecurityContext;
+import com.flexicore.model.Baseclass;
+import com.flexicore.model.Basic;
+import com.flexicore.security.SecurityContextBase;
+import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
+import com.wizzdi.flexicore.security.data.BasicRepository;
+import org.pf4j.Extension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.*;
+import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Component
-@PluginInfo(version=1)
+
 @Extension
-public class LicensingProductRepository extends AbstractRepositoryPlugin implements ServicePlugin {
+public class LicensingProductRepository implements Plugin {
+	@PersistenceContext
+	private EntityManager em;
+	@Autowired
+	private LicensingEntityRepository licensingEntityRepository;
 
 
-    public List<LicensingProduct> listAllLicensingProducts(LicensingProductFiltering licensingProductFiltering, SecurityContext securityContext) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<LicensingProduct> q = cb.createQuery(LicensingProduct.class);
-        Root<LicensingProduct> r = q.from(LicensingProduct.class);
-        List<Predicate> preds = new ArrayList<>();
-        addLicensingProductsPredicates(licensingProductFiltering,r,cb,preds);
-        QueryInformationHolder<LicensingProduct> queryInformationHolder = new QueryInformationHolder<>(licensingProductFiltering,LicensingProduct.class, securityContext);
-        return getAllFiltered(queryInformationHolder, preds, cb, q, r);
-    }
+	public List<LicensingProduct> listAllLicensingProducts(LicensingProductFiltering licensingProductFiltering, SecurityContextBase securityContextBase) {
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<LicensingProduct> q = cb.createQuery(LicensingProduct.class);
+		Root<LicensingProduct> r = q.from(LicensingProduct.class);
+		List<Predicate> preds = new ArrayList<>();
+		addLicensingProductsPredicates(licensingProductFiltering, cb,q,r, preds,securityContextBase);
+		q.select(r).where(preds.toArray(Predicate[]::new));
+		TypedQuery<LicensingProduct> query = em.createQuery(q);
+		BasicRepository.addPagination(licensingProductFiltering, query);
+		return query.getResultList();
+	}
 
-    private void addLicensingProductsPredicates(LicensingProductFiltering licensingProductFiltering, Root<LicensingProduct> r, CriteriaBuilder cb, List<Predicate> preds) {
-        LicensingEntityRepository.addLicensingEntitiesPredicates(licensingProductFiltering,r,cb,preds);
-    }
+	public <T extends LicensingProduct> void addLicensingProductsPredicates(LicensingProductFiltering licensingProductFiltering,CriteriaBuilder cb, CommonAbstractCriteria q, From<?,T> r, List<Predicate> preds,SecurityContextBase securityContextBase) {
+		licensingEntityRepository.addLicensingEntitiesPredicates(licensingProductFiltering, cb,q,r, preds,securityContextBase);
+	}
 
-    public long countAllLicensingProducts(LicensingProductFiltering licensingProductFiltering, SecurityContext securityContext) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<Long> q = cb.createQuery(Long.class);
-        Root<LicensingProduct> r = q.from(LicensingProduct.class);
-        List<Predicate> preds = new ArrayList<>();
-        addLicensingProductsPredicates(licensingProductFiltering,r,cb,preds);
-        QueryInformationHolder<LicensingProduct> queryInformationHolder = new QueryInformationHolder<>(licensingProductFiltering,LicensingProduct.class, securityContext);
-        return countAllFiltered(queryInformationHolder, preds, cb, q, r);
-    }
+	public long countAllLicensingProducts(LicensingProductFiltering licensingProductFiltering, SecurityContextBase securityContextBase) {
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<Long> q = cb.createQuery(Long.class);
+		Root<LicensingProduct> r = q.from(LicensingProduct.class);
+		List<Predicate> preds = new ArrayList<>();
+		addLicensingProductsPredicates(licensingProductFiltering, cb,q,r, preds,securityContextBase);
+		q.select(cb.count(r)).where(preds.toArray(Predicate[]::new));
+		TypedQuery<Long> query = em.createQuery(q);
+		return query.getSingleResult();
+	}
+
+	public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {
+		return licensingEntityRepository.listByIds(c, ids, securityContext);
+	}
+
+	public <T extends Baseclass> T getByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {
+		return licensingEntityRepository.getByIdOrNull(id, c, securityContext);
+	}
+
+	public <D extends Basic, E extends Baseclass, T extends D> T getByIdOrNull(String id, Class<T> c, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+		return licensingEntityRepository.getByIdOrNull(id, c, baseclassAttribute, securityContext);
+	}
+
+	public <D extends Basic, E extends Baseclass, T extends D> List<T> listByIds(Class<T> c, Set<String> ids, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+		return licensingEntityRepository.listByIds(c, ids, baseclassAttribute, securityContext);
+	}
+
+	public <D extends Basic, T extends D> List<T> findByIds(Class<T> c, Set<String> ids, SingularAttribute<D, String> idAttribute) {
+		return licensingEntityRepository.findByIds(c, ids, idAttribute);
+	}
+
+	public <T extends Basic> List<T> findByIds(Class<T> c, Set<String> requested) {
+		return licensingEntityRepository.findByIds(c, requested);
+	}
+
+	public <T> T findByIdOrNull(Class<T> type, String id) {
+		return licensingEntityRepository.findByIdOrNull(type, id);
+	}
+
+	@Transactional
+	public void merge(Object base) {
+		licensingEntityRepository.merge(base);
+	}
+
+	@Transactional
+	public void massMerge(List<?> toMerge) {
+		licensingEntityRepository.massMerge(toMerge);
+	}
 }

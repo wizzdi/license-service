@@ -2,15 +2,15 @@ package com.flexicore.license.request;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.flexicore.model.FileResource;
-import com.flexicore.model.Tenant;
 import com.flexicore.license.model.LicenseRequest;
-import com.flexicore.request.BaseclassCreate;
+import com.flexicore.model.SecurityTenant;
+import com.wizzdi.flexicore.file.model.FileResource;
+import com.wizzdi.flexicore.security.request.BasicCreate;
 
 /**
  * Created by Asaf on 17/10/2016.
  */
-public class LicenseRequestCreate extends BaseclassCreate {
+public class LicenseRequestCreate extends BasicCreate {
     private String macAddress;
     private String diskSerialNumber;
     private String externalHWSerialNumber;
@@ -20,7 +20,7 @@ public class LicenseRequestCreate extends BaseclassCreate {
     @JsonIgnore
     private FileResource requestFile;
     @JsonIgnore
-    private Tenant licensedTenant;
+    private SecurityTenant licensedTenant;
     private String licensedTenantId;
 
 
@@ -96,11 +96,11 @@ public class LicenseRequestCreate extends BaseclassCreate {
     }
 
     @JsonIgnore
-    public Tenant getLicensedTenant() {
+    public SecurityTenant getLicensedTenant() {
         return licensedTenant;
     }
 
-    public <T extends LicenseRequestCreate> T setLicensedTenant(Tenant licensedTenant) {
+    public <T extends LicenseRequestCreate> T setLicensedTenant(SecurityTenant licensedTenant) {
         this.licensedTenant = licensedTenant;
         return (T) this;
     }

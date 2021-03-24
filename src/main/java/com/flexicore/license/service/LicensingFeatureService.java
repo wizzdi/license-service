@@ -2,64 +2,95 @@ package com.flexicore.license.service;
 
 
 import com.flexicore.license.data.LicensingFeatureRepository;
-import com.flexicore.data.jsoncontainers.PaginationResponse;
-import com.flexicore.interfaces.ServicePlugin;
-import com.flexicore.model.Baseclass;
 import com.flexicore.license.model.LicensingFeature;
 import com.flexicore.license.model.LicensingProduct;
+import com.flexicore.license.model.LicensingProduct_;
 import com.flexicore.license.request.LicensingFeatureCreate;
 import com.flexicore.license.request.LicensingFeatureFiltering;
 import com.flexicore.license.request.LicensingFeatureUpdate;
-import com.flexicore.security.SecurityContext;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.flexicore.model.Baseclass;
+import com.flexicore.model.Basic;
+import com.flexicore.security.SecurityContextBase;
+import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
+import com.wizzdi.flexicore.security.response.PaginationResponse;
+import com.wizzdi.flexicore.security.service.BaseclassService;
 import org.pf4j.Extension;
-import com.flexicore.annotations.plugins.PluginInfo;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
-import javax.ws.rs.BadRequestException;
+import javax.persistence.metamodel.SingularAttribute;
 import java.util.*;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 
-@PluginInfo(version=1)
 @Extension
 @Component
-public class LicensingFeatureService implements ServicePlugin {
+public class LicensingFeatureService implements Plugin {
 
 
     @Autowired
-    @PluginInfo(version = 1)
+
     private LicensingFeatureRepository repository;
 
     @Autowired
-    @PluginInfo(version = 1)
+
     private LicensingEntityService licensingEntityService;
 
-   private Logger logger = Logger.getLogger(getClass().getCanonicalName());
 
 
-    public <T extends Baseclass> T getByIdOrNull(String id, Class<T> c, List<String> batchString, SecurityContext securityContext) {
-        return repository.getByIdOrNull(id, c, batchString, securityContext);
-    }
-
-
-    public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContext securityContext) {
+   public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {
         return repository.listByIds(c, ids, securityContext);
     }
 
-    public LicensingFeature createLicensingFeature(LicensingFeatureCreate pluginCreationContainer, SecurityContext securityContext) {
-        LicensingFeature licensingFeature = createLicensingFeatureNoMerge(pluginCreationContainer, securityContext);
+    public <T extends Baseclass> T getByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {
+        return repository.getByIdOrNull(id, c, securityContext);
+    }
+
+    public <D extends Basic, E extends Baseclass, T extends D> T getByIdOrNull(String id, Class<T> c, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+        return repository.getByIdOrNull(id, c, baseclassAttribute, securityContext);
+    }
+
+    public <D extends Basic, E extends Baseclass, T extends D> List<T> listByIds(Class<T> c, Set<String> ids, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+        return repository.listByIds(c, ids, baseclassAttribute, securityContext);
+    }
+
+    public <D extends Basic, T extends D> List<T> findByIds(Class<T> c, Set<String> ids, SingularAttribute<D, String> idAttribute) {
+        return repository.findByIds(c, ids, idAttribute);
+    }
+
+    public <T extends Basic> List<T> findByIds(Class<T> c, Set<String> requested) {
+        return repository.findByIds(c, requested);
+    }
+
+    public <T> T findByIdOrNull(Class<T> type, String id) {
+        return repository.findByIdOrNull(type, id);
+    }
+
+    @Transactional
+    public void merge(Object base) {
+        repository.merge(base);
+    }
+
+    @Transactional
+    public void massMerge(List<?> toMerge) {
+        repository.massMerge(toMerge);
+    }
+    public LicensingFeature createLicensingFeature(LicensingFeatureCreate pluginCreationContainer, SecurityContextBase securityContextBase) {
+        LicensingFeature licensingFeature = createLicensingFeatureNoMerge(pluginCreationContainer, securityContextBase);
         repository.merge(licensingFeature);
         return licensingFeature;
 
 
     }
 
-    public LicensingFeature createLicensingFeatureNoMerge(LicensingFeatureCreate licensingFeatureCreate, SecurityContext securityContext) {
-        LicensingFeature licensingFeature = new LicensingFeature(licensingFeatureCreate.getName(), securityContext);
+    public LicensingFeature createLicensingFeatureNoMerge(LicensingFeatureCreate licensingFeatureCreate, SecurityContextBase securityContextBase) {
+        LicensingFeature licensingFeature = new LicensingFeature();
+        licensingFeature.setId(Baseclass.getBase64ID());
         updateLicensingFeatureNoMerge(licensingFeature, licensingFeatureCreate);
+        BaseclassService.createSecurityObjectNoMerge(licensingFeature,securityContextBase);
         return licensingFeature;
     }
 
@@ -73,7 +104,7 @@ public class LicensingFeatureService implements ServicePlugin {
     }
 
 
-    public LicensingFeature updateLicensingFeature(LicensingFeatureUpdate licensingFeatureUpdate, SecurityContext securityContext) {
+    public LicensingFeature updateLicensingFeature(LicensingFeatureUpdate licensingFeatureUpdate, SecurityContextBase securityContextBase) {
         LicensingFeature licensingFeature = licensingFeatureUpdate.getLicensingFeature();
         if (updateLicensingFeatureNoMerge(licensingFeature, licensingFeatureUpdate)) {
             repository.merge(licensingFeature);
@@ -81,34 +112,30 @@ public class LicensingFeatureService implements ServicePlugin {
         return licensingFeature;
     }
 
-    public List<LicensingFeature> listAllLicensingFeatures(LicensingFeatureFiltering licensingFeatureFiltering, SecurityContext securityContext) {
-        return repository.listAllLicensingFeatures(licensingFeatureFiltering, securityContext);
+    public List<LicensingFeature> listAllLicensingFeatures(LicensingFeatureFiltering licensingFeatureFiltering, SecurityContextBase securityContextBase) {
+        return repository.listAllLicensingFeatures(licensingFeatureFiltering, securityContextBase);
     }
 
-    public void validate(LicensingFeatureCreate licensingFeatureCreate, SecurityContext securityContext) {
-        licensingEntityService.validate(licensingFeatureCreate, securityContext);
+    public void validate(LicensingFeatureCreate licensingFeatureCreate, SecurityContextBase securityContextBase) {
+        licensingEntityService.validate(licensingFeatureCreate, securityContextBase);
 
     }
 
-    public void validate(LicensingFeatureFiltering licensingFeatureFiltering, SecurityContext securityContext) {
-        licensingEntityService.validate(licensingFeatureFiltering,securityContext);
+    public void validate(LicensingFeatureFiltering licensingFeatureFiltering, SecurityContextBase securityContextBase) {
+        licensingEntityService.validate(licensingFeatureFiltering,securityContextBase);
         Set<String> productIds=licensingFeatureFiltering.getLicensingProductsIds();
-        Map<String, LicensingProduct> productMap=productIds.isEmpty()?new HashMap<>():listByIds(LicensingProduct.class,productIds,securityContext).parallelStream().collect(Collectors.toMap(f->f.getId(),f->f));
+        Map<String, LicensingProduct> productMap=productIds.isEmpty()?new HashMap<>():listByIds(LicensingProduct.class,productIds, LicensingProduct_.security,securityContextBase).parallelStream().collect(Collectors.toMap(f->f.getId(), f->f));
         productIds.removeAll(productMap.keySet());
         if(!productIds.isEmpty()){
-            throw new BadRequestException("No LicensingProduct with ids "+productIds);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No LicensingProduct with ids "+productIds);
         }
         licensingFeatureFiltering.setLicensingProducts(new ArrayList<>(productMap.values()));
     }
 
-    public PaginationResponse<LicensingFeature> getAllLicensingFeatures(LicensingFeatureFiltering licensingFeatureFiltering, SecurityContext securityContext) {
-        List<LicensingFeature> list = listAllLicensingFeatures(licensingFeatureFiltering, securityContext);
-        long count = repository.countAllLicensingFeatures(licensingFeatureFiltering, securityContext);
+    public PaginationResponse<LicensingFeature> getAllLicensingFeatures(LicensingFeatureFiltering licensingFeatureFiltering, SecurityContextBase securityContextBase) {
+        List<LicensingFeature> list = listAllLicensingFeatures(licensingFeatureFiltering, securityContextBase);
+        long count = repository.countAllLicensingFeatures(licensingFeatureFiltering, securityContextBase);
         return new PaginationResponse<>(list, licensingFeatureFiltering, count);
     }
 
-    @Transactional
-    public void massMerge(List<?> toMerge) {
-        repository.massMerge(toMerge);
-    }
 }
