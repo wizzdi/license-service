@@ -15,20 +15,19 @@ import com.flexicore.license.service.LicensingFeatureService;
 import com.flexicore.model.SecurityTenant;
 import com.flexicore.model.SecurityUser;
 import com.flexicore.security.SecurityContextBase;
-import com.flexicore.service.SecurityService;
 import com.wizzdi.flexicore.boot.rest.interfaces.AspectPlugin;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.stereotype.Component;
 import org.pf4j.Extension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestMapping;
+
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.websocket.CloseReason;
@@ -52,7 +51,7 @@ public class LicenseImposer implements AspectPlugin {
     private LicenseRequestService licenseRequestService;
     @Autowired
     private LicensingFeatureService licensingFeatureService;
-    @Around("execution(@org.springframework.web.bind.annotation.RequestMapping * *(..)) || within(@(@org.springframework.web.bind.annotation.RequestMapping *) *)|| within(@org.springframework.web.bind.annotation.RequestMapping *)")
+    @Around("execution(@com.flexicore.license.annotations.HasFeatures * *(..)) || within(@(@com.flexicore.license.annotations.HasFeatures *) *)|| within(@com.flexicore.license.annotations.HasFeatures *)")
     public Object transformReturn(ProceedingJoinPoint joinPoint) throws Throwable {
         long start = System.currentTimeMillis();
         Session websocketSession;
@@ -62,16 +61,16 @@ public class LicenseImposer implements AspectPlugin {
         String methodName = method.getName();
         logger.info("Method is: " + methodName + " , on Thread " + Thread.currentThread().getName());
         websocketSession = getWebsocketSession(parameters);
-        SecurityContextBase securityContextBase;
+        SecurityContextBase securityContext;
         if (websocketSession != null) {
-            securityContextBase = (SecurityContextBase) websocketSession.getUserProperties().get("securityContextBase");
+            securityContext = (SecurityContextBase) websocketSession.getUserProperties().get("securityContext");
         } else {
-            securityContextBase = (SecurityContextBase) parameters[parameters.length - 1];
+            securityContext = (SecurityContextBase) parameters[parameters.length - 1];
 
         }
 
-        SecurityUser user = securityContextBase.getUser();
-        List<SecurityTenant> tenants = securityContextBase.getTenants();
+        SecurityUser user = securityContext.getUser();
+        List<SecurityTenant> tenants = securityContext.getTenants();
 
         List<HasFeature> features = new ArrayList<>();
         HasFeatures featuresOnClass = method.getDeclaringClass().getAnnotation(HasFeatures.class);

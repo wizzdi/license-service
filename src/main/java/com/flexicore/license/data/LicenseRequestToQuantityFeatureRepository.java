@@ -7,9 +7,10 @@ import com.flexicore.model.Basic;
 import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.data.BasicRepository;
+import org.springframework.stereotype.Component;
 import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
@@ -31,28 +32,28 @@ public class LicenseRequestToQuantityFeatureRepository implements Plugin {
 	private LicenseRequestToFeatureRepository licenseRequestToFeatureRepository;
 
 
-	public List<LicenseRequestToQuantityFeature> listAllLicenseRequestToQuantityFeatures(LicenseRequestToQuantityFeatureFiltering licenseRequestToQuantityFeatureFiltering, SecurityContextBase securityContextBase) {
+	public List<LicenseRequestToQuantityFeature> listAllLicenseRequestToQuantityFeatures(LicenseRequestToQuantityFeatureFiltering licenseRequestToQuantityFeatureFiltering, SecurityContextBase securityContext) {
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<LicenseRequestToQuantityFeature> q = cb.createQuery(LicenseRequestToQuantityFeature.class);
 		Root<LicenseRequestToQuantityFeature> r = q.from(LicenseRequestToQuantityFeature.class);
 		List<Predicate> preds = new ArrayList<>();
-		addLicenseRequestToQuantityFeaturesPredicates(licenseRequestToQuantityFeatureFiltering, cb,q,r, preds,securityContextBase);
+		addLicenseRequestToQuantityFeaturesPredicates(licenseRequestToQuantityFeatureFiltering, cb,q,r, preds,securityContext);
 		q.select(r).where(preds.toArray(Predicate[]::new));
 		TypedQuery<LicenseRequestToQuantityFeature> query = em.createQuery(q);
 		BasicRepository.addPagination(licenseRequestToQuantityFeatureFiltering, query);
 		return query.getResultList();
 	}
 
-	public <T extends LicenseRequestToQuantityFeature> void addLicenseRequestToQuantityFeaturesPredicates(LicenseRequestToQuantityFeatureFiltering licenseRequestToQuantityFeatureFiltering,CriteriaBuilder cb,CommonAbstractCriteria q, From<?,T> r,  List<Predicate> preds,SecurityContextBase securityContextBase) {
-		licenseRequestToFeatureRepository.addLicenseRequestToFeaturesPredicates(licenseRequestToQuantityFeatureFiltering, cb,q,r, preds,securityContextBase);
+	public <T extends LicenseRequestToQuantityFeature> void addLicenseRequestToQuantityFeaturesPredicates(LicenseRequestToQuantityFeatureFiltering licenseRequestToQuantityFeatureFiltering,CriteriaBuilder cb,CommonAbstractCriteria q, From<?,T> r,  List<Predicate> preds,SecurityContextBase securityContext) {
+		licenseRequestToFeatureRepository.addLicenseRequestToFeaturesPredicates(licenseRequestToQuantityFeatureFiltering, cb,q,r, preds,securityContext);
 	}
 
-	public long countAllLicenseRequestToQuantityFeatures(LicenseRequestToQuantityFeatureFiltering licenseRequestToQuantityFeatureFiltering, SecurityContextBase securityContextBase) {
+	public long countAllLicenseRequestToQuantityFeatures(LicenseRequestToQuantityFeatureFiltering licenseRequestToQuantityFeatureFiltering, SecurityContextBase securityContext) {
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<Long> q = cb.createQuery(Long.class);
 		Root<LicenseRequestToQuantityFeature> r = q.from(LicenseRequestToQuantityFeature.class);
 		List<Predicate> preds = new ArrayList<>();
-		addLicenseRequestToQuantityFeaturesPredicates(licenseRequestToQuantityFeatureFiltering, cb,q,r, preds,securityContextBase);
+		addLicenseRequestToQuantityFeaturesPredicates(licenseRequestToQuantityFeatureFiltering, cb,q,r, preds,securityContext);
 		q.select(cb.count(r)).where(preds.toArray(Predicate[]::new));
 		TypedQuery<Long> query = em.createQuery(q);
 		return query.getSingleResult();

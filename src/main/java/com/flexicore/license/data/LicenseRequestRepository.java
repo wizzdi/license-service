@@ -9,9 +9,10 @@ import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.data.BasicRepository;
 import com.wizzdi.flexicore.security.data.SecuredBasicRepository;
+import org.springframework.stereotype.Component;
 import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
@@ -34,20 +35,20 @@ public class LicenseRequestRepository implements Plugin {
 	private SecuredBasicRepository securedBasicRepository;
 
 
-	public List<LicenseRequest> listAllLicenseRequests(LicenseRequestFiltering licenseRequestFiltering, SecurityContextBase securityContextBase) {
+	public List<LicenseRequest> listAllLicenseRequests(LicenseRequestFiltering licenseRequestFiltering, SecurityContextBase securityContext) {
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<LicenseRequest> q = cb.createQuery(LicenseRequest.class);
 		Root<LicenseRequest> r = q.from(LicenseRequest.class);
 		List<Predicate> preds = new ArrayList<>();
-		addLicenseRequestsPredicates(licenseRequestFiltering,cb,q,r, preds,securityContextBase);
+		addLicenseRequestsPredicates(licenseRequestFiltering,cb,q,r, preds,securityContext);
 		q.select(r).where(preds.toArray(Predicate[]::new));
 		TypedQuery<LicenseRequest> query = em.createQuery(q);
 		BasicRepository.addPagination(licenseRequestFiltering, query);
 		return query.getResultList();
 	}
 
-	public <T extends LicenseRequest> void addLicenseRequestsPredicates(LicenseRequestFiltering licenseRequestFiltering,  CriteriaBuilder cb,CommonAbstractCriteria q,From<?,T> r, List<Predicate> preds,SecurityContextBase securityContextBase) {
-		securedBasicRepository.addSecuredBasicPredicates(licenseRequestFiltering.getBasicPropertiesFilter(),cb,q,r,preds,securityContextBase);
+	public <T extends LicenseRequest> void addLicenseRequestsPredicates(LicenseRequestFiltering licenseRequestFiltering,  CriteriaBuilder cb,CommonAbstractCriteria q,From<?,T> r, List<Predicate> preds,SecurityContextBase securityContext) {
+		securedBasicRepository.addSecuredBasicPredicates(licenseRequestFiltering.getBasicPropertiesFilter(),cb,q,r,preds,securityContext);
 		Join<T, LicenseRequestToEntity> join = null;
 		if (licenseRequestFiltering.getLicensingFeatures() != null && !licenseRequestFiltering.getLicensingFeatures().isEmpty()) {
 			Set<String> ids = licenseRequestFiltering.getLicensingFeatures().parallelStream().map(f -> f.getId()).collect(Collectors.toSet());
@@ -73,12 +74,12 @@ public class LicenseRequestRepository implements Plugin {
 
 	}
 
-	public long countAllLicenseRequests(LicenseRequestFiltering licenseRequestFiltering, SecurityContextBase securityContextBase) {
+	public long countAllLicenseRequests(LicenseRequestFiltering licenseRequestFiltering, SecurityContextBase securityContext) {
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<Long> q = cb.createQuery(Long.class);
 		Root<LicenseRequest> r = q.from(LicenseRequest.class);
 		List<Predicate> preds = new ArrayList<>();
-		addLicenseRequestsPredicates(licenseRequestFiltering, cb,q,r, preds,securityContextBase);
+		addLicenseRequestsPredicates(licenseRequestFiltering, cb,q,r, preds,securityContext);
 		q.select(cb.count(r)).where(preds.toArray(Predicate[]::new));
 		TypedQuery<Long> query = em.createQuery(q);
 		return query.getSingleResult();

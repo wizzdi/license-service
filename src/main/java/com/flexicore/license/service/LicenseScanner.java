@@ -11,6 +11,7 @@ import com.flexicore.license.request.LicensingProductCreate;
 import com.flexicore.license.request.LicensingProductFiltering;
 import com.wizzdi.flexicore.boot.base.events.PluginsLoadedEvent;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
+import org.springframework.stereotype.Component;
 import org.pf4j.Extension;
 import org.pf4j.PluginManager;
 import org.slf4j.Logger;
@@ -19,7 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
+
 
 import java.lang.reflect.Method;
 import java.util.*;

@@ -9,9 +9,10 @@ import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.data.BasicRepository;
 import com.wizzdi.flexicore.security.data.SecuredBasicRepository;
+import org.springframework.stereotype.Component;
 import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
@@ -33,31 +34,31 @@ public class LicensingEntityRepository implements Plugin {
 	private SecuredBasicRepository securedBasicRepository;
 
 
-	public List<LicensingEntity> listAllLicensingEntities(LicensingEntityFiltering licensingEntityFiltering, SecurityContextBase securityContextBase) {
+	public List<LicensingEntity> listAllLicensingEntities(LicensingEntityFiltering licensingEntityFiltering, SecurityContextBase securityContext) {
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<LicensingEntity> q = cb.createQuery(LicensingEntity.class);
 		Root<LicensingEntity> r = q.from(LicensingEntity.class);
 		List<Predicate> preds = new ArrayList<>();
-		addLicensingEntitiesPredicates(licensingEntityFiltering, cb,q,r, preds,securityContextBase);
+		addLicensingEntitiesPredicates(licensingEntityFiltering, cb,q,r, preds,securityContext);
 		q.select(r).where(preds.toArray(Predicate[]::new));
 		TypedQuery<LicensingEntity> query = em.createQuery(q);
 		BasicRepository.addPagination(licensingEntityFiltering, query);
 		return query.getResultList();
 	}
 
-	public <T extends LicensingEntity> void addLicensingEntitiesPredicates(LicensingEntityFiltering licensingEntityFiltering,CriteriaBuilder cb,CommonAbstractCriteria q, From<?,T> r,  List<Predicate> preds,SecurityContextBase securityContextBase) {
-	    securedBasicRepository.addSecuredBasicPredicates(licensingEntityFiltering.getBasicPropertiesFilter(), cb,q,r,preds,securityContextBase);
+	public <T extends LicensingEntity> void addLicensingEntitiesPredicates(LicensingEntityFiltering licensingEntityFiltering,CriteriaBuilder cb,CommonAbstractCriteria q, From<?,T> r,  List<Predicate> preds,SecurityContextBase securityContext) {
+	    securedBasicRepository.addSecuredBasicPredicates(licensingEntityFiltering.getBasicPropertiesFilter(), cb,q,r,preds,securityContext);
 		if (licensingEntityFiltering.getCanonicalNames() != null && !licensingEntityFiltering.getCanonicalNames().isEmpty()) {
 			preds.add(r.get(LicensingEntity_.canonicalName).in(licensingEntityFiltering.getCanonicalNames()));
 		}
 	}
 
-	public long countAllLicensingEntities(LicensingEntityFiltering licensingEntityFiltering, SecurityContextBase securityContextBase) {
+	public long countAllLicensingEntities(LicensingEntityFiltering licensingEntityFiltering, SecurityContextBase securityContext) {
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<Long> q = cb.createQuery(Long.class);
 		Root<LicensingEntity> r = q.from(LicensingEntity.class);
 		List<Predicate> preds = new ArrayList<>();
-		addLicensingEntitiesPredicates(licensingEntityFiltering,cb,q,r, preds,securityContextBase);
+		addLicensingEntitiesPredicates(licensingEntityFiltering,cb,q,r, preds,securityContext);
 		q.select(cb.count(r)).where(preds.toArray(Predicate[]::new));
 		TypedQuery<Long> query = em.createQuery(q);
 		return query.getSingleResult();

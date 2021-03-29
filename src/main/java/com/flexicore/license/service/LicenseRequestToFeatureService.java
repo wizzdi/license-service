@@ -4,6 +4,7 @@ package com.flexicore.license.service;
 import com.flexicore.license.data.LicenseRequestToFeatureRepository;
 import com.flexicore.license.model.LicenseRequestToFeature;
 import com.flexicore.license.model.LicensingFeature;
+import com.flexicore.license.model.LicensingFeature_;
 import com.flexicore.license.request.LicenseRequestToFeatureCreate;
 import com.flexicore.license.request.LicenseRequestToFeatureFiltering;
 import com.flexicore.license.request.LicenseRequestToFeatureUpdate;
@@ -13,11 +14,12 @@ import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
 import com.wizzdi.flexicore.security.service.BaseclassService;
+import org.springframework.stereotype.Component;
 import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
+
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -81,20 +83,20 @@ public class LicenseRequestToFeatureService implements Plugin {
     @Autowired
     private ApplicationEventPublisher licenseRequestUpdateEventEvent;
 
-    public LicenseRequestToFeature createLicenseRequestToFeature(LicenseRequestToFeatureCreate pluginCreationContainer, SecurityContextBase securityContextBase) {
-        LicenseRequestToFeature licenseRequestToFeature = createLicenseRequestToFeatureNoMerge(pluginCreationContainer, securityContextBase);
+    public LicenseRequestToFeature createLicenseRequestToFeature(LicenseRequestToFeatureCreate pluginCreationContainer, SecurityContextBase securityContext) {
+        LicenseRequestToFeature licenseRequestToFeature = createLicenseRequestToFeatureNoMerge(pluginCreationContainer, securityContext);
         repository.merge(licenseRequestToFeature);
-        licenseRequestUpdateEventEvent.publishEvent(new LicenseRequestUpdateEvent().setLicenseRequest(licenseRequestToFeature.getLicenseRequest()).setSecurityContextBase(securityContextBase));
+        licenseRequestUpdateEventEvent.publishEvent(new LicenseRequestUpdateEvent().setLicenseRequest(licenseRequestToFeature.getLicenseRequest()).setSecurityContextBase(securityContext));
         return licenseRequestToFeature;
 
 
     }
 
-    public LicenseRequestToFeature createLicenseRequestToFeatureNoMerge(LicenseRequestToFeatureCreate licenseRequestToFeatureCreate, SecurityContextBase securityContextBase) {
+    public LicenseRequestToFeature createLicenseRequestToFeatureNoMerge(LicenseRequestToFeatureCreate licenseRequestToFeatureCreate, SecurityContextBase securityContext) {
         LicenseRequestToFeature licenseRequestToFeature = new LicenseRequestToFeature();
         licenseRequestToFeature.setId(Baseclass.getBase64ID());
         updateLicenseRequestToFeatureNoMerge(licenseRequestToFeature, licenseRequestToFeatureCreate);
-        BaseclassService.createSecurityObjectNoMerge(licenseRequestToFeature,securityContextBase);
+        BaseclassService.createSecurityObjectNoMerge(licenseRequestToFeature,securityContext);
         return licenseRequestToFeature;
     }
 
@@ -109,24 +111,24 @@ public class LicenseRequestToFeatureService implements Plugin {
     }
 
 
-    public LicenseRequestToFeature updateLicenseRequestToFeature(LicenseRequestToFeatureUpdate licenseRequestToFeatureUpdate, SecurityContextBase securityContextBase) {
+    public LicenseRequestToFeature updateLicenseRequestToFeature(LicenseRequestToFeatureUpdate licenseRequestToFeatureUpdate, SecurityContextBase securityContext) {
         LicenseRequestToFeature licenseRequestToFeature = licenseRequestToFeatureUpdate.getLicenseRequestToFeature();
         if (updateLicenseRequestToFeatureNoMerge(licenseRequestToFeature, licenseRequestToFeatureUpdate)) {
             repository.merge(licenseRequestToFeature);
-            licenseRequestUpdateEventEvent.publishEvent(new LicenseRequestUpdateEvent().setLicenseRequest(licenseRequestToFeature.getLicenseRequest()).setSecurityContextBase(securityContextBase));
+            licenseRequestUpdateEventEvent.publishEvent(new LicenseRequestUpdateEvent().setLicenseRequest(licenseRequestToFeature.getLicenseRequest()).setSecurityContextBase(securityContext));
 
         }
         return licenseRequestToFeature;
     }
 
-    public List<LicenseRequestToFeature> listAllLicenseRequestToFeatures(LicenseRequestToFeatureFiltering licenseRequestToFeatureFiltering, SecurityContextBase securityContextBase) {
-        return repository.listAllLicenseRequestToFeatures(licenseRequestToFeatureFiltering, securityContextBase);
+    public List<LicenseRequestToFeature> listAllLicenseRequestToFeatures(LicenseRequestToFeatureFiltering licenseRequestToFeatureFiltering, SecurityContextBase securityContext) {
+        return repository.listAllLicenseRequestToFeatures(licenseRequestToFeatureFiltering, securityContext);
     }
 
-    public void validate(LicenseRequestToFeatureCreate licenseRequestToFeatureCreate, SecurityContextBase securityContextBase) {
-        licenseRequestToEntityService.validate(licenseRequestToFeatureCreate, securityContextBase);
+    public void validate(LicenseRequestToFeatureCreate licenseRequestToFeatureCreate, SecurityContextBase securityContext) {
+        licenseRequestToEntityService.validate(licenseRequestToFeatureCreate, securityContext);
         String licensingFeatureId=licenseRequestToFeatureCreate.getLicensingFeatureId();
-        LicensingFeature licensingFeature=licensingFeatureId!=null?getByIdOrNull(licensingFeatureId,LicensingFeature.class,null,securityContextBase):null;
+        LicensingFeature licensingFeature=licensingFeatureId!=null?getByIdOrNull(licensingFeatureId,LicensingFeature.class, LicensingFeature_.security,securityContext):null;
         if(licensingFeature==null && licensingFeatureId!=null){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No License feature with id "+licensingFeatureId);
         }
@@ -134,13 +136,13 @@ public class LicenseRequestToFeatureService implements Plugin {
 
     }
 
-    public void validate(LicenseRequestToFeatureFiltering licenseRequestToFeatureFiltering, SecurityContextBase securityContextBase) {
-        licenseRequestToEntityService.validate(licenseRequestToFeatureFiltering, securityContextBase);
+    public void validate(LicenseRequestToFeatureFiltering licenseRequestToFeatureFiltering, SecurityContextBase securityContext) {
+        licenseRequestToEntityService.validate(licenseRequestToFeatureFiltering, securityContext);
     }
 
-    public PaginationResponse<LicenseRequestToFeature> getAllLicenseRequestToFeatures(LicenseRequestToFeatureFiltering licenseRequestToFeatureFiltering, SecurityContextBase securityContextBase) {
-        List<LicenseRequestToFeature> list = listAllLicenseRequestToFeatures(licenseRequestToFeatureFiltering, securityContextBase);
-        long count = repository.countAllLicenseRequestToFeatures(licenseRequestToFeatureFiltering, securityContextBase);
+    public PaginationResponse<LicenseRequestToFeature> getAllLicenseRequestToFeatures(LicenseRequestToFeatureFiltering licenseRequestToFeatureFiltering, SecurityContextBase securityContext) {
+        List<LicenseRequestToFeature> list = listAllLicenseRequestToFeatures(licenseRequestToFeatureFiltering, securityContext);
+        long count = repository.countAllLicenseRequestToFeatures(licenseRequestToFeatureFiltering, securityContext);
         return new PaginationResponse<>(list, licenseRequestToFeatureFiltering, count);
     }
 

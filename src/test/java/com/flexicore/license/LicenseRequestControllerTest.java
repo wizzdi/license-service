@@ -1,13 +1,14 @@
+package com.flexicore.license;
+
+import com.flexicore.license.app.App;
+import com.wizzdi.flexicore.security.request.BasicPropertiesFilter;
+import com.wizzdi.flexicore.security.request.SecurityTenantFilter;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
-import com.flexicore.init.FlexiCoreApplication;
 import com.flexicore.license.model.LicenseRequest;
 import com.flexicore.license.request.LicenseRequestCreate;
 import com.flexicore.license.request.LicenseRequestFiltering;
 import com.flexicore.license.request.LicenseRequestUpdate;
 import com.flexicore.model.SecurityTenant;
-import com.flexicore.request.AuthenticationRequest;
-import com.flexicore.request.TenantFilter;
-import com.flexicore.response.AuthenticationResponse;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,12 +26,12 @@ import java.util.List;
 import java.util.UUID;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = FlexiCoreApplication.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = App.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @ActiveProfiles("test")
 
-public class LicenseRequestRESTServiceTest {
+public class LicenseRequestControllerTest {
 
     private LicenseRequest licenseRequest;
     @Autowired
@@ -38,12 +39,10 @@ public class LicenseRequestRESTServiceTest {
 
     @BeforeAll
     private void init() {
-        ResponseEntity<AuthenticationResponse> authenticationResponse = this.restTemplate.postForEntity("/FlexiCore/rest/authenticationNew/login", new AuthenticationRequest().setEmail("admin@flexicore.com").setPassword("admin"), AuthenticationResponse.class);
-        String authenticationKey = authenticationResponse.getBody().getAuthenticationKey();
         restTemplate.getRestTemplate().setInterceptors(
                 Collections.singletonList((request, body, execution) -> {
                     request.getHeaders()
-                            .add("authenticationKey", authenticationKey);
+                            .add("authenticationKey", "fake");
                     return execution.execute(request, body);
                 }));
     }
@@ -54,7 +53,7 @@ public class LicenseRequestRESTServiceTest {
         String name = UUID.randomUUID().toString();
         ParameterizedTypeReference<PaginationResponse<SecurityTenant>> t=new ParameterizedTypeReference<PaginationResponse<SecurityTenant>>() {};
 
-        ResponseEntity<PaginationResponse<SecurityTenant>> tenantResponse = this.restTemplate.exchange("/FlexiCore/rest/tenant/getAllTenants", HttpMethod.POST, new HttpEntity<>(new TenantFilter()), t);
+        ResponseEntity<PaginationResponse<SecurityTenant>> tenantResponse = this.restTemplate.exchange("/securityTenant/getAll", HttpMethod.POST, new HttpEntity<>(new SecurityTenantFilter()), t);
         Assertions.assertEquals(200, tenantResponse.getStatusCodeValue());
         PaginationResponse<SecurityTenant> body = tenantResponse.getBody();
         Assertions.assertNotNull(body);
@@ -63,7 +62,7 @@ public class LicenseRequestRESTServiceTest {
         LicenseRequestCreate request = new LicenseRequestCreate()
                 .setLicensedTenantId(tenants.get(0).getId())
                 .setName(name);
-        ResponseEntity<LicenseRequest> licenseRequestResponse = this.restTemplate.postForEntity("/FlexiCore/rest/licenseRequests/createLicenseRequest", request, LicenseRequest.class);
+        ResponseEntity<LicenseRequest> licenseRequestResponse = this.restTemplate.postForEntity("/licenseRequests/createLicenseRequest", request, LicenseRequest.class);
         Assertions.assertEquals(200, licenseRequestResponse.getStatusCodeValue());
         licenseRequest = licenseRequestResponse.getBody();
         assertLicenseRequest(request, licenseRequest);
@@ -74,11 +73,11 @@ public class LicenseRequestRESTServiceTest {
     @Order(2)
     public void testListAllLicenseRequests() {
         LicenseRequestFiltering request = new LicenseRequestFiltering();
-        request.setNameLike(licenseRequest.getName());
+        request.setBasicPropertiesFilter(new BasicPropertiesFilter().setNameLike(licenseRequest.getName()));
         ParameterizedTypeReference<PaginationResponse<LicenseRequest>> t = new ParameterizedTypeReference<PaginationResponse<LicenseRequest>>() {
         };
 
-        ResponseEntity<PaginationResponse<LicenseRequest>> licenseRequestResponse = this.restTemplate.exchange("/FlexiCore/rest/licenseRequests/getAllLicenseRequests", HttpMethod.POST, new HttpEntity<>(request), t);
+        ResponseEntity<PaginationResponse<LicenseRequest>> licenseRequestResponse = this.restTemplate.exchange("/licenseRequests/getAllLicenseRequests", HttpMethod.POST, new HttpEntity<>(request), t);
         Assertions.assertEquals(200, licenseRequestResponse.getStatusCodeValue());
         PaginationResponse<LicenseRequest> body = licenseRequestResponse.getBody();
         Assertions.assertNotNull(body);
@@ -102,7 +101,7 @@ public class LicenseRequestRESTServiceTest {
         LicenseRequestUpdate request = new LicenseRequestUpdate()
                 .setId(licenseRequest.getId())
                 .setName(name);
-        ResponseEntity<LicenseRequest> licenseRequestResponse = this.restTemplate.exchange("/FlexiCore/rest/licenseRequests/updateLicenseRequest", HttpMethod.PUT, new HttpEntity<>(request), LicenseRequest.class);
+        ResponseEntity<LicenseRequest> licenseRequestResponse = this.restTemplate.exchange("/licenseRequests/updateLicenseRequest", HttpMethod.PUT, new HttpEntity<>(request), LicenseRequest.class);
         Assertions.assertEquals(200, licenseRequestResponse.getStatusCodeValue());
         licenseRequest = licenseRequestResponse.getBody();
         assertLicenseRequest(request, licenseRequest);

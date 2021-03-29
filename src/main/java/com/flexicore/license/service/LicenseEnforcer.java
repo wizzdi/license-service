@@ -1,23 +1,23 @@
 package com.flexicore.license.service;
 
 
+import com.flexicore.license.data.LicenseEnforcerRepository;
 import com.flexicore.license.exceptions.ExceededQuota;
 import com.flexicore.license.holders.UpdateLicensingCache;
 import com.flexicore.license.model.LicenseRequest;
 import com.flexicore.license.model.LicenseRequestToQuantityFeature;
+import com.flexicore.license.request.ClazzCountRequest;
 import com.flexicore.license.request.LicenseRequestFiltering;
 import com.flexicore.license.request.LicenseRequestToQuantityFeatureFiltering;
 import com.flexicore.license.request.QuotaLimitation;
+import com.flexicore.license.response.ClazzCount;
 import com.flexicore.model.Baseclass;
-import com.flexicore.model.ClazzIdFiltering;
+import com.flexicore.model.Clazz;
 import com.flexicore.model.SecurityTenant;
-import com.flexicore.request.BaseclassCountRequest;
-import com.flexicore.response.BaseclassCount;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.events.BasicCreated;
-import com.wizzdi.flexicore.security.service.BasicService;
 import org.pf4j.Extension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +55,7 @@ public class LicenseEnforcer implements Plugin {
     @Autowired
     private LicenseRequestService licenseRequestService;
     @Autowired
-    private BasicService basicService;
+    private LicenseEnforcerRepository licenseEnforcerRepository;
 
 
     @EventListener
@@ -122,10 +122,10 @@ public class LicenseEnforcer implements Plugin {
                 }
             }
         }
-        List<ClazzIdFiltering> clazzIdFilterings = clazzNames.parallelStream().map(f -> Baseclass.getClazzByName(f)).filter(f -> f != null).map(f -> new ClazzIdFiltering().setId(f.getId())).collect(Collectors.toList());
-        List<BaseclassCount> baseclassCounts = clazzIdFilterings.isEmpty() ? new ArrayList<>() : baseclassService.getBaseclassCount(new BaseclassCountRequest().setGroupByTenant(true).setClazzIds(clazzIdFilterings), null);
-        for (BaseclassCount baseclassCount : baseclassCounts) {
-            cachedCount.put(getKey(baseclassCount.getTenant().getId(), baseclassCount.getCanonicalName()), new AtomicLong(baseclassCount.getCount()));
+        Map<String, Clazz> clazzMap = clazzNames.parallelStream().map(f -> Baseclass.getClazzByName(f)).filter(f -> f != null).collect(Collectors.toMap(f->f.getId(),f->f,(a,b)->a));
+        List<ClazzCount> clazzCounts = clazzMap.isEmpty() ? new ArrayList<>() : licenseEnforcerRepository.getClazzCount(new ClazzCountRequest().setGroupByTenant(true).setClazzIds(clazzMap.keySet()));
+        for (ClazzCount clazzCount : clazzCounts) {
+            cachedCount.put(getKey(clazzCount.getTenantId(), clazzCount.getClazzName()), new AtomicLong(clazzCount.getCount()));
         }
     }
 

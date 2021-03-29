@@ -12,10 +12,11 @@ import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
 import com.wizzdi.flexicore.security.service.BaseclassService;
+import org.springframework.stereotype.Component;
 import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
+
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.metamodel.SingularAttribute;
@@ -78,20 +79,20 @@ public class LicenseRequestToQuantityFeatureService implements Plugin {
     @Autowired
     private ApplicationEventPublisher licenseRequestUpdateEventEvent;
 
-    public LicenseRequestToQuantityFeature createLicenseRequestToQuantityFeature(LicenseRequestToQuantityFeatureCreate pluginCreationContainer, SecurityContextBase securityContextBase) {
-        LicenseRequestToQuantityFeature licenseRequestToQuantityFeature = createLicenseRequestToQuantityFeatureNoMerge(pluginCreationContainer, securityContextBase);
+    public LicenseRequestToQuantityFeature createLicenseRequestToQuantityFeature(LicenseRequestToQuantityFeatureCreate pluginCreationContainer, SecurityContextBase securityContext) {
+        LicenseRequestToQuantityFeature licenseRequestToQuantityFeature = createLicenseRequestToQuantityFeatureNoMerge(pluginCreationContainer, securityContext);
         repository.merge(licenseRequestToQuantityFeature);
-        licenseRequestUpdateEventEvent.publishEvent(new LicenseRequestUpdateEvent().setLicenseRequest(licenseRequestToQuantityFeature.getLicenseRequest()).setSecurityContextBase(securityContextBase));
+        licenseRequestUpdateEventEvent.publishEvent(new LicenseRequestUpdateEvent().setLicenseRequest(licenseRequestToQuantityFeature.getLicenseRequest()).setSecurityContextBase(securityContext));
         return licenseRequestToQuantityFeature;
 
 
     }
 
-    public LicenseRequestToQuantityFeature createLicenseRequestToQuantityFeatureNoMerge(LicenseRequestToQuantityFeatureCreate licenseRequestToQuantityFeatureCreate, SecurityContextBase securityContextBase) {
+    public LicenseRequestToQuantityFeature createLicenseRequestToQuantityFeatureNoMerge(LicenseRequestToQuantityFeatureCreate licenseRequestToQuantityFeatureCreate, SecurityContextBase securityContext) {
         LicenseRequestToQuantityFeature licenseRequestToQuantityFeature = new LicenseRequestToQuantityFeature();
         licenseRequestToQuantityFeature.setId(Baseclass.getBase64ID());
         updateLicenseRequestToQuantityFeatureNoMerge(licenseRequestToQuantityFeature, licenseRequestToQuantityFeatureCreate);
-        BaseclassService.createSecurityObjectNoMerge(licenseRequestToQuantityFeature,securityContextBase);
+        BaseclassService.createSecurityObjectNoMerge(licenseRequestToQuantityFeature,securityContext);
         return licenseRequestToQuantityFeature;
     }
 
@@ -106,33 +107,33 @@ public class LicenseRequestToQuantityFeatureService implements Plugin {
     }
 
 
-    public LicenseRequestToQuantityFeature updateLicenseRequestToQuantityFeature(LicenseRequestToQuantityFeatureUpdate licenseRequestToQuantityFeatureUpdate, SecurityContextBase securityContextBase) {
+    public LicenseRequestToQuantityFeature updateLicenseRequestToQuantityFeature(LicenseRequestToQuantityFeatureUpdate licenseRequestToQuantityFeatureUpdate, SecurityContextBase securityContext) {
         LicenseRequestToQuantityFeature licenseRequestToQuantityFeature = licenseRequestToQuantityFeatureUpdate.getLicenseRequestToQuantityFeature();
         if (updateLicenseRequestToQuantityFeatureNoMerge(licenseRequestToQuantityFeature, licenseRequestToQuantityFeatureUpdate)) {
             repository.merge(licenseRequestToQuantityFeature);
-            licenseRequestUpdateEventEvent.publishEvent(new LicenseRequestUpdateEvent().setLicenseRequest(licenseRequestToQuantityFeature.getLicenseRequest()).setSecurityContextBase(securityContextBase));
+            licenseRequestUpdateEventEvent.publishEvent(new LicenseRequestUpdateEvent().setLicenseRequest(licenseRequestToQuantityFeature.getLicenseRequest()).setSecurityContextBase(securityContext));
 
         }
         return licenseRequestToQuantityFeature;
     }
 
-    public List<LicenseRequestToQuantityFeature> listAllLicenseRequestToQuantityFeatures(LicenseRequestToQuantityFeatureFiltering licenseRequestToQuantityFeatureFiltering, SecurityContextBase securityContextBase) {
-        return repository.listAllLicenseRequestToQuantityFeatures(licenseRequestToQuantityFeatureFiltering, securityContextBase);
+    public List<LicenseRequestToQuantityFeature> listAllLicenseRequestToQuantityFeatures(LicenseRequestToQuantityFeatureFiltering licenseRequestToQuantityFeatureFiltering, SecurityContextBase securityContext) {
+        return repository.listAllLicenseRequestToQuantityFeatures(licenseRequestToQuantityFeatureFiltering, securityContext);
     }
 
-    public void validate(LicenseRequestToQuantityFeatureCreate licenseRequestToQuantityFeatureCreate, SecurityContextBase securityContextBase) {
-        licenseRequestToFeatureService.validate(licenseRequestToQuantityFeatureCreate, securityContextBase);
+    public void validate(LicenseRequestToQuantityFeatureCreate licenseRequestToQuantityFeatureCreate, SecurityContextBase securityContext) {
+        licenseRequestToFeatureService.validate(licenseRequestToQuantityFeatureCreate, securityContext);
 
 
     }
 
-    public void validate(LicenseRequestToQuantityFeatureFiltering licenseRequestToQuantityFeatureFiltering, SecurityContextBase securityContextBase) {
-        licenseRequestToFeatureService.validate(licenseRequestToQuantityFeatureFiltering, securityContextBase);
+    public void validate(LicenseRequestToQuantityFeatureFiltering licenseRequestToQuantityFeatureFiltering, SecurityContextBase securityContext) {
+        licenseRequestToFeatureService.validate(licenseRequestToQuantityFeatureFiltering, securityContext);
     }
 
-    public PaginationResponse<LicenseRequestToQuantityFeature> getAllLicenseRequestToQuantityFeatures(LicenseRequestToQuantityFeatureFiltering licenseRequestToQuantityFeatureFiltering, SecurityContextBase securityContextBase) {
-        List<LicenseRequestToQuantityFeature> list = listAllLicenseRequestToQuantityFeatures(licenseRequestToQuantityFeatureFiltering, securityContextBase);
-        long count = repository.countAllLicenseRequestToQuantityFeatures(licenseRequestToQuantityFeatureFiltering, securityContextBase);
+    public PaginationResponse<LicenseRequestToQuantityFeature> getAllLicenseRequestToQuantityFeatures(LicenseRequestToQuantityFeatureFiltering licenseRequestToQuantityFeatureFiltering, SecurityContextBase securityContext) {
+        List<LicenseRequestToQuantityFeature> list = listAllLicenseRequestToQuantityFeatures(licenseRequestToQuantityFeatureFiltering, securityContext);
+        long count = repository.countAllLicenseRequestToQuantityFeatures(licenseRequestToQuantityFeatureFiltering, securityContext);
         return new PaginationResponse<>(list, licenseRequestToQuantityFeatureFiltering, count);
     }
 

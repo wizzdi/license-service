@@ -31,28 +31,28 @@ public class LicenseRequestToFeatureRepository implements Plugin {
 	private LicenseRequestToEntityRepository licenseRequestToEntityRepository;
 
 
-	public List<LicenseRequestToFeature> listAllLicenseRequestToFeatures(LicenseRequestToFeatureFiltering licenseRequestToFeatureFiltering, SecurityContextBase securityContextBase) {
+	public List<LicenseRequestToFeature> listAllLicenseRequestToFeatures(LicenseRequestToFeatureFiltering licenseRequestToFeatureFiltering, SecurityContextBase securityContext) {
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<LicenseRequestToFeature> q = cb.createQuery(LicenseRequestToFeature.class);
 		Root<LicenseRequestToFeature> r = q.from(LicenseRequestToFeature.class);
 		List<Predicate> preds = new ArrayList<>();
-		addLicenseRequestToFeaturesPredicates(licenseRequestToFeatureFiltering, cb, q, r, preds, securityContextBase);
+		addLicenseRequestToFeaturesPredicates(licenseRequestToFeatureFiltering, cb, q, r, preds, securityContext);
 		q.select(r).where(preds.toArray(Predicate[]::new));
 		TypedQuery<LicenseRequestToFeature> query = em.createQuery(q);
 		BasicRepository.addPagination(licenseRequestToFeatureFiltering, query);
 		return query.getResultList();
 	}
 
-	public <T extends LicenseRequestToFeature> void addLicenseRequestToFeaturesPredicates(LicenseRequestToFeatureFiltering licenseRequestToFeatureFiltering, CriteriaBuilder cb, CommonAbstractCriteria q, From<?, T> r, List<Predicate> preds, SecurityContextBase securityContextBase) {
-		licenseRequestToEntityRepository.addLicenseRequestToEntitiesPredicates(licenseRequestToFeatureFiltering, cb, q, r, preds, securityContextBase);
+	public <T extends LicenseRequestToFeature> void addLicenseRequestToFeaturesPredicates(LicenseRequestToFeatureFiltering licenseRequestToFeatureFiltering, CriteriaBuilder cb, CommonAbstractCriteria q, From<?, T> r, List<Predicate> preds, SecurityContextBase securityContext) {
+		licenseRequestToEntityRepository.addLicenseRequestToEntitiesPredicates(licenseRequestToFeatureFiltering, cb, q, r, preds, securityContext);
 	}
 
-	public long countAllLicenseRequestToFeatures(LicenseRequestToFeatureFiltering licenseRequestToFeatureFiltering, SecurityContextBase securityContextBase) {
+	public long countAllLicenseRequestToFeatures(LicenseRequestToFeatureFiltering licenseRequestToFeatureFiltering, SecurityContextBase securityContext) {
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<Long> q = cb.createQuery(Long.class);
 		Root<LicenseRequestToFeature> r = q.from(LicenseRequestToFeature.class);
 		List<Predicate> preds = new ArrayList<>();
-		addLicenseRequestToFeaturesPredicates(licenseRequestToFeatureFiltering, cb, q, r, preds, securityContextBase);
+		addLicenseRequestToFeaturesPredicates(licenseRequestToFeatureFiltering, cb, q, r, preds, securityContext);
 		q.select(cb.count(r)).where(preds.toArray(Predicate[]::new));
 		TypedQuery<Long> query = em.createQuery(q);
 		return query.getSingleResult();

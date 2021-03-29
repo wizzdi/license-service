@@ -14,10 +14,11 @@ import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
 import com.wizzdi.flexicore.security.service.BaseclassService;
 import com.wizzdi.flexicore.security.service.BasicService;
+import org.springframework.stereotype.Component;
 import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
+
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -80,19 +81,19 @@ public class LicenseRequestToEntityService implements Plugin {
     public void massMerge(List<?> toMerge) {
         repository.massMerge(toMerge);
     }
-    public LicenseRequestToEntity createLicenseRequestToEntity(LicenseRequestToEntityCreate pluginCreationContainer, SecurityContextBase securityContextBase) {
-        LicenseRequestToEntity licenseRequestToEntity = createLicenseRequestToEntityNoMerge(pluginCreationContainer, securityContextBase);
+    public LicenseRequestToEntity createLicenseRequestToEntity(LicenseRequestToEntityCreate pluginCreationContainer, SecurityContextBase securityContext) {
+        LicenseRequestToEntity licenseRequestToEntity = createLicenseRequestToEntityNoMerge(pluginCreationContainer, securityContext);
         repository.merge(licenseRequestToEntity);
         return licenseRequestToEntity;
 
 
     }
 
-    public LicenseRequestToEntity createLicenseRequestToEntityNoMerge(LicenseRequestToEntityCreate licenseRequestToEntityCreate, SecurityContextBase securityContextBase) {
+    public LicenseRequestToEntity createLicenseRequestToEntityNoMerge(LicenseRequestToEntityCreate licenseRequestToEntityCreate, SecurityContextBase securityContext) {
         LicenseRequestToEntity licenseRequestToEntity = new LicenseRequestToEntity();
         licenseRequestToEntity.setId(Baseclass.getBase64ID());
         updateLicenseRequestToEntityNoMerge(licenseRequestToEntity, licenseRequestToEntityCreate);
-        BaseclassService.createSecurityObjectNoMerge(licenseRequestToEntity,securityContextBase);
+        BaseclassService.createSecurityObjectNoMerge(licenseRequestToEntity,securityContext);
         return licenseRequestToEntity;
     }
 
@@ -124,14 +125,14 @@ public class LicenseRequestToEntityService implements Plugin {
     }
     
 
-    public List<LicenseRequestToEntity> listAllLicenseRequestToEntities(LicenseRequestToEntityFiltering licenseRequestToEntityFiltering, SecurityContextBase securityContextBase) {
-        return repository.listAllLicenseRequestToEntities(licenseRequestToEntityFiltering, securityContextBase);
+    public List<LicenseRequestToEntity> listAllLicenseRequestToEntities(LicenseRequestToEntityFiltering licenseRequestToEntityFiltering, SecurityContextBase securityContext) {
+        return repository.listAllLicenseRequestToEntities(licenseRequestToEntityFiltering, securityContext);
     }
 
-    public void validate(LicenseRequestToEntityCreate licenseRequestToEntityCreate, SecurityContextBase securityContextBase) {
-        basicService.validate(licenseRequestToEntityCreate, securityContextBase);
+    public void validate(LicenseRequestToEntityCreate licenseRequestToEntityCreate, SecurityContextBase securityContext) {
+        basicService.validate(licenseRequestToEntityCreate, securityContext);
         String licenseRequestId=licenseRequestToEntityCreate.getLicenseRequestId();
-        LicenseRequest licenseRequest=licenseRequestId!=null?getByIdOrNull(licenseRequestId,LicenseRequest.class,null,securityContextBase):null;
+        LicenseRequest licenseRequest=licenseRequestId!=null?getByIdOrNull(licenseRequestId,LicenseRequest.class,LicenseRequest_.security,securityContext):null;
         if(licenseRequest==null && licenseRequestId!=null){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No License request with id "+licenseRequestId);
         }
@@ -139,17 +140,17 @@ public class LicenseRequestToEntityService implements Plugin {
 
     }
 
-    public void validateCreate(LicenseRequestToEntityCreate licenseRequestToEntityCreate, SecurityContextBase securityContextBase) {
-        validate(licenseRequestToEntityCreate,securityContextBase);
+    public void validateCreate(LicenseRequestToEntityCreate licenseRequestToEntityCreate, SecurityContextBase securityContext) {
+        validate(licenseRequestToEntityCreate,securityContext);
         if((licenseRequestToEntityCreate.getPerpetual()==null || !licenseRequestToEntityCreate.getPerpetual()) && licenseRequestToEntityCreate.getExpiration()==null){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Perpetual or expiration date should be set");
         }
     }
 
-    public void validate(LicenseRequestToEntityFiltering licenseRequestToEntityFiltering, SecurityContextBase securityContextBase) {
-        basicService.validate(licenseRequestToEntityFiltering,securityContextBase);
+    public void validate(LicenseRequestToEntityFiltering licenseRequestToEntityFiltering, SecurityContextBase securityContext) {
+        basicService.validate(licenseRequestToEntityFiltering,securityContext);
         Set<String> licenseRequestIds=licenseRequestToEntityFiltering.getLicenseRequestIds();
-        Map<String,LicenseRequest> licenseRequestMap=licenseRequestIds.isEmpty()?new HashMap<>():listByIds(LicenseRequest.class,licenseRequestIds, LicenseRequest_.security,securityContextBase).parallelStream().collect(Collectors.toMap(f->f.getId(), f->f));
+        Map<String,LicenseRequest> licenseRequestMap=licenseRequestIds.isEmpty()?new HashMap<>():listByIds(LicenseRequest.class,licenseRequestIds, LicenseRequest_.security,securityContext).parallelStream().collect(Collectors.toMap(f->f.getId(), f->f));
         licenseRequestIds.removeAll(licenseRequestMap.keySet());
         if(!licenseRequestIds.isEmpty()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No License Requests with ids "+licenseRequestIds);
@@ -157,9 +158,9 @@ public class LicenseRequestToEntityService implements Plugin {
         licenseRequestToEntityFiltering.setLicenseRequests(new ArrayList<>(licenseRequestMap.values()));
     }
 
-    public PaginationResponse<LicenseRequestToEntity> getAllLicenseRequestToEntities(LicenseRequestToEntityFiltering licenseRequestToEntityFiltering, SecurityContextBase securityContextBase) {
-        List<LicenseRequestToEntity> list = listAllLicenseRequestToEntities(licenseRequestToEntityFiltering, securityContextBase);
-        long count = repository.countAllLicenseRequestToEntities(licenseRequestToEntityFiltering, securityContextBase);
+    public PaginationResponse<LicenseRequestToEntity> getAllLicenseRequestToEntities(LicenseRequestToEntityFiltering licenseRequestToEntityFiltering, SecurityContextBase securityContext) {
+        List<LicenseRequestToEntity> list = listAllLicenseRequestToEntities(licenseRequestToEntityFiltering, securityContext);
+        long count = repository.countAllLicenseRequestToEntities(licenseRequestToEntityFiltering, securityContext);
         return new PaginationResponse<>(list, licenseRequestToEntityFiltering, count);
     }
 

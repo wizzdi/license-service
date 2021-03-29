@@ -25,7 +25,10 @@ public class LicenseRequestCreate extends BasicCreate {
 
 
     public LicenseRequestCreate(LicenseRequest other) {
-        super(other);
+        setName(other.getName());
+        setDescription(other.getDescription());
+        setUpdateDate(other.getUpdateDate());
+        setSoftDelete(other.isSoftDelete());
         this.macAddress = other.getMacAddress();
         this.diskSerialNumber = other.getDiskSerialNumber();
         this.externalHWSerialNumber = other.getExternalHWSerialNumber();

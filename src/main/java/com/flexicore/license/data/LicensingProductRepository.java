@@ -7,9 +7,10 @@ import com.flexicore.model.Basic;
 import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.data.BasicRepository;
+import org.springframework.stereotype.Component;
 import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
@@ -31,28 +32,28 @@ public class LicensingProductRepository implements Plugin {
 	private LicensingEntityRepository licensingEntityRepository;
 
 
-	public List<LicensingProduct> listAllLicensingProducts(LicensingProductFiltering licensingProductFiltering, SecurityContextBase securityContextBase) {
+	public List<LicensingProduct> listAllLicensingProducts(LicensingProductFiltering licensingProductFiltering, SecurityContextBase securityContext) {
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<LicensingProduct> q = cb.createQuery(LicensingProduct.class);
 		Root<LicensingProduct> r = q.from(LicensingProduct.class);
 		List<Predicate> preds = new ArrayList<>();
-		addLicensingProductsPredicates(licensingProductFiltering, cb,q,r, preds,securityContextBase);
+		addLicensingProductsPredicates(licensingProductFiltering, cb,q,r, preds,securityContext);
 		q.select(r).where(preds.toArray(Predicate[]::new));
 		TypedQuery<LicensingProduct> query = em.createQuery(q);
 		BasicRepository.addPagination(licensingProductFiltering, query);
 		return query.getResultList();
 	}
 
-	public <T extends LicensingProduct> void addLicensingProductsPredicates(LicensingProductFiltering licensingProductFiltering,CriteriaBuilder cb, CommonAbstractCriteria q, From<?,T> r, List<Predicate> preds,SecurityContextBase securityContextBase) {
-		licensingEntityRepository.addLicensingEntitiesPredicates(licensingProductFiltering, cb,q,r, preds,securityContextBase);
+	public <T extends LicensingProduct> void addLicensingProductsPredicates(LicensingProductFiltering licensingProductFiltering,CriteriaBuilder cb, CommonAbstractCriteria q, From<?,T> r, List<Predicate> preds,SecurityContextBase securityContext) {
+		licensingEntityRepository.addLicensingEntitiesPredicates(licensingProductFiltering, cb,q,r, preds,securityContext);
 	}
 
-	public long countAllLicensingProducts(LicensingProductFiltering licensingProductFiltering, SecurityContextBase securityContextBase) {
+	public long countAllLicensingProducts(LicensingProductFiltering licensingProductFiltering, SecurityContextBase securityContext) {
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<Long> q = cb.createQuery(Long.class);
 		Root<LicensingProduct> r = q.from(LicensingProduct.class);
 		List<Predicate> preds = new ArrayList<>();
-		addLicensingProductsPredicates(licensingProductFiltering, cb,q,r, preds,securityContextBase);
+		addLicensingProductsPredicates(licensingProductFiltering, cb,q,r, preds,securityContext);
 		q.select(cb.count(r)).where(preds.toArray(Predicate[]::new));
 		TypedQuery<Long> query = em.createQuery(q);
 		return query.getSingleResult();

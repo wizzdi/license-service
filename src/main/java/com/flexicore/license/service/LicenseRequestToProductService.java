@@ -4,6 +4,7 @@ package com.flexicore.license.service;
 import com.flexicore.license.data.LicenseRequestToProductRepository;
 import com.flexicore.license.model.LicenseRequestToProduct;
 import com.flexicore.license.model.LicensingProduct;
+import com.flexicore.license.model.LicensingProduct_;
 import com.flexicore.license.request.LicenseRequestToProductCreate;
 import com.flexicore.license.request.LicenseRequestToProductFiltering;
 import com.flexicore.license.request.LicenseRequestToProductUpdate;
@@ -13,11 +14,12 @@ import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
 import com.wizzdi.flexicore.security.service.BaseclassService;
+import org.springframework.stereotype.Component;
 import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
+
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -78,21 +80,21 @@ public class LicenseRequestToProductService implements Plugin {
     public void massMerge(List<?> toMerge) {
         repository.massMerge(toMerge);
     }
-    public LicenseRequestToProduct createLicenseRequestToProduct(LicenseRequestToProductCreate pluginCreationContainer, SecurityContextBase securityContextBase) {
-        LicenseRequestToProduct licenseRequestToProduct = createLicenseRequestToProductNoMerge(pluginCreationContainer, securityContextBase);
+    public LicenseRequestToProduct createLicenseRequestToProduct(LicenseRequestToProductCreate pluginCreationContainer, SecurityContextBase securityContext) {
+        LicenseRequestToProduct licenseRequestToProduct = createLicenseRequestToProductNoMerge(pluginCreationContainer, securityContext);
         repository.merge(licenseRequestToProduct);
-        licenseRequestUpdateEventEvent.publishEvent(new LicenseRequestUpdateEvent().setLicenseRequest(licenseRequestToProduct.getLicenseRequest()).setSecurityContextBase(securityContextBase));
+        licenseRequestUpdateEventEvent.publishEvent(new LicenseRequestUpdateEvent().setLicenseRequest(licenseRequestToProduct.getLicenseRequest()).setSecurityContextBase(securityContext));
 
         return licenseRequestToProduct;
 
 
     }
 
-    public LicenseRequestToProduct createLicenseRequestToProductNoMerge(LicenseRequestToProductCreate licenseRequestToProductCreate, SecurityContextBase securityContextBase) {
+    public LicenseRequestToProduct createLicenseRequestToProductNoMerge(LicenseRequestToProductCreate licenseRequestToProductCreate, SecurityContextBase securityContext) {
         LicenseRequestToProduct licenseRequestToProduct = new LicenseRequestToProduct();
         licenseRequestToProduct.setId(Baseclass.getBase64ID());
         updateLicenseRequestToProductNoMerge(licenseRequestToProduct, licenseRequestToProductCreate);
-        BaseclassService.createSecurityObjectNoMerge(licenseRequestToProduct,securityContextBase);
+        BaseclassService.createSecurityObjectNoMerge(licenseRequestToProduct,securityContext);
         return licenseRequestToProduct;
     }
 
@@ -110,24 +112,24 @@ public class LicenseRequestToProductService implements Plugin {
     private ApplicationEventPublisher licenseRequestUpdateEventEvent;
 
 
-    public LicenseRequestToProduct updateLicenseRequestToProduct(LicenseRequestToProductUpdate licenseRequestToProductUpdate, SecurityContextBase securityContextBase) {
+    public LicenseRequestToProduct updateLicenseRequestToProduct(LicenseRequestToProductUpdate licenseRequestToProductUpdate, SecurityContextBase securityContext) {
         LicenseRequestToProduct licenseRequestToProduct = licenseRequestToProductUpdate.getLicenseRequestToProduct();
         if (updateLicenseRequestToProductNoMerge(licenseRequestToProduct, licenseRequestToProductUpdate)) {
             repository.merge(licenseRequestToProduct);
-            licenseRequestUpdateEventEvent.publishEvent(new LicenseRequestUpdateEvent().setLicenseRequest(licenseRequestToProduct.getLicenseRequest()).setSecurityContextBase(securityContextBase));
+            licenseRequestUpdateEventEvent.publishEvent(new LicenseRequestUpdateEvent().setLicenseRequest(licenseRequestToProduct.getLicenseRequest()).setSecurityContextBase(securityContext));
 
         }
         return licenseRequestToProduct;
     }
 
-    public List<LicenseRequestToProduct> listAllLicenseRequestToProducts(LicenseRequestToProductFiltering licenseRequestToProductFiltering, SecurityContextBase securityContextBase) {
-        return repository.listAllLicenseRequestToProducts(licenseRequestToProductFiltering, securityContextBase);
+    public List<LicenseRequestToProduct> listAllLicenseRequestToProducts(LicenseRequestToProductFiltering licenseRequestToProductFiltering, SecurityContextBase securityContext) {
+        return repository.listAllLicenseRequestToProducts(licenseRequestToProductFiltering, securityContext);
     }
 
-    public void validate(LicenseRequestToProductCreate licenseRequestToProductCreate, SecurityContextBase securityContextBase) {
-        licenseRequestToEntityService.validate(licenseRequestToProductCreate, securityContextBase);
+    public void validate(LicenseRequestToProductCreate licenseRequestToProductCreate, SecurityContextBase securityContext) {
+        licenseRequestToEntityService.validate(licenseRequestToProductCreate, securityContext);
         String licensingProductId=licenseRequestToProductCreate.getLicensingProductId();
-        LicensingProduct licensingProduct=licensingProductId!=null?getByIdOrNull(licensingProductId, LicensingProduct.class,null,securityContextBase):null;
+        LicensingProduct licensingProduct=licensingProductId!=null?getByIdOrNull(licensingProductId, LicensingProduct.class, LicensingProduct_.security,securityContext):null;
         if(licensingProduct==null && licensingProductId!=null){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No License product with id "+licensingProductId);
         }
@@ -135,13 +137,13 @@ public class LicenseRequestToProductService implements Plugin {
 
     }
 
-    public void validate(LicenseRequestToProductFiltering licenseRequestToProductFiltering, SecurityContextBase securityContextBase) {
-        licenseRequestToEntityService.validate(licenseRequestToProductFiltering,securityContextBase);
+    public void validate(LicenseRequestToProductFiltering licenseRequestToProductFiltering, SecurityContextBase securityContext) {
+        licenseRequestToEntityService.validate(licenseRequestToProductFiltering,securityContext);
     }
 
-    public PaginationResponse<LicenseRequestToProduct> getAllLicenseRequestToProducts(LicenseRequestToProductFiltering licenseRequestToProductFiltering, SecurityContextBase securityContextBase) {
-        List<LicenseRequestToProduct> list = listAllLicenseRequestToProducts(licenseRequestToProductFiltering, securityContextBase);
-        long count = repository.countAllLicenseRequestToProducts(licenseRequestToProductFiltering, securityContextBase);
+    public PaginationResponse<LicenseRequestToProduct> getAllLicenseRequestToProducts(LicenseRequestToProductFiltering licenseRequestToProductFiltering, SecurityContextBase securityContext) {
+        List<LicenseRequestToProduct> list = listAllLicenseRequestToProducts(licenseRequestToProductFiltering, securityContext);
+        long count = repository.countAllLicenseRequestToProducts(licenseRequestToProductFiltering, securityContext);
         return new PaginationResponse<>(list, licenseRequestToProductFiltering, count);
     }
 

@@ -14,10 +14,11 @@ import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
 import com.wizzdi.flexicore.security.service.BaseclassService;
+import org.springframework.stereotype.Component;
 import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
+
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -78,19 +79,19 @@ public class LicensingFeatureService implements Plugin {
     public void massMerge(List<?> toMerge) {
         repository.massMerge(toMerge);
     }
-    public LicensingFeature createLicensingFeature(LicensingFeatureCreate pluginCreationContainer, SecurityContextBase securityContextBase) {
-        LicensingFeature licensingFeature = createLicensingFeatureNoMerge(pluginCreationContainer, securityContextBase);
+    public LicensingFeature createLicensingFeature(LicensingFeatureCreate pluginCreationContainer, SecurityContextBase securityContext) {
+        LicensingFeature licensingFeature = createLicensingFeatureNoMerge(pluginCreationContainer, securityContext);
         repository.merge(licensingFeature);
         return licensingFeature;
 
 
     }
 
-    public LicensingFeature createLicensingFeatureNoMerge(LicensingFeatureCreate licensingFeatureCreate, SecurityContextBase securityContextBase) {
+    public LicensingFeature createLicensingFeatureNoMerge(LicensingFeatureCreate licensingFeatureCreate, SecurityContextBase securityContext) {
         LicensingFeature licensingFeature = new LicensingFeature();
         licensingFeature.setId(Baseclass.getBase64ID());
         updateLicensingFeatureNoMerge(licensingFeature, licensingFeatureCreate);
-        BaseclassService.createSecurityObjectNoMerge(licensingFeature,securityContextBase);
+        BaseclassService.createSecurityObjectNoMerge(licensingFeature,securityContext);
         return licensingFeature;
     }
 
@@ -104,7 +105,7 @@ public class LicensingFeatureService implements Plugin {
     }
 
 
-    public LicensingFeature updateLicensingFeature(LicensingFeatureUpdate licensingFeatureUpdate, SecurityContextBase securityContextBase) {
+    public LicensingFeature updateLicensingFeature(LicensingFeatureUpdate licensingFeatureUpdate, SecurityContextBase securityContext) {
         LicensingFeature licensingFeature = licensingFeatureUpdate.getLicensingFeature();
         if (updateLicensingFeatureNoMerge(licensingFeature, licensingFeatureUpdate)) {
             repository.merge(licensingFeature);
@@ -112,19 +113,19 @@ public class LicensingFeatureService implements Plugin {
         return licensingFeature;
     }
 
-    public List<LicensingFeature> listAllLicensingFeatures(LicensingFeatureFiltering licensingFeatureFiltering, SecurityContextBase securityContextBase) {
-        return repository.listAllLicensingFeatures(licensingFeatureFiltering, securityContextBase);
+    public List<LicensingFeature> listAllLicensingFeatures(LicensingFeatureFiltering licensingFeatureFiltering, SecurityContextBase securityContext) {
+        return repository.listAllLicensingFeatures(licensingFeatureFiltering, securityContext);
     }
 
-    public void validate(LicensingFeatureCreate licensingFeatureCreate, SecurityContextBase securityContextBase) {
-        licensingEntityService.validate(licensingFeatureCreate, securityContextBase);
+    public void validate(LicensingFeatureCreate licensingFeatureCreate, SecurityContextBase securityContext) {
+        licensingEntityService.validate(licensingFeatureCreate, securityContext);
 
     }
 
-    public void validate(LicensingFeatureFiltering licensingFeatureFiltering, SecurityContextBase securityContextBase) {
-        licensingEntityService.validate(licensingFeatureFiltering,securityContextBase);
+    public void validate(LicensingFeatureFiltering licensingFeatureFiltering, SecurityContextBase securityContext) {
+        licensingEntityService.validate(licensingFeatureFiltering,securityContext);
         Set<String> productIds=licensingFeatureFiltering.getLicensingProductsIds();
-        Map<String, LicensingProduct> productMap=productIds.isEmpty()?new HashMap<>():listByIds(LicensingProduct.class,productIds, LicensingProduct_.security,securityContextBase).parallelStream().collect(Collectors.toMap(f->f.getId(), f->f));
+        Map<String, LicensingProduct> productMap=productIds.isEmpty()?new HashMap<>():listByIds(LicensingProduct.class,productIds, LicensingProduct_.security,securityContext).parallelStream().collect(Collectors.toMap(f->f.getId(), f->f));
         productIds.removeAll(productMap.keySet());
         if(!productIds.isEmpty()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No LicensingProduct with ids "+productIds);
@@ -132,9 +133,9 @@ public class LicensingFeatureService implements Plugin {
         licensingFeatureFiltering.setLicensingProducts(new ArrayList<>(productMap.values()));
     }
 
-    public PaginationResponse<LicensingFeature> getAllLicensingFeatures(LicensingFeatureFiltering licensingFeatureFiltering, SecurityContextBase securityContextBase) {
-        List<LicensingFeature> list = listAllLicensingFeatures(licensingFeatureFiltering, securityContextBase);
-        long count = repository.countAllLicensingFeatures(licensingFeatureFiltering, securityContextBase);
+    public PaginationResponse<LicensingFeature> getAllLicensingFeatures(LicensingFeatureFiltering licensingFeatureFiltering, SecurityContextBase securityContext) {
+        List<LicensingFeature> list = listAllLicensingFeatures(licensingFeatureFiltering, securityContext);
+        long count = repository.countAllLicensingFeatures(licensingFeatureFiltering, securityContext);
         return new PaginationResponse<>(list, licensingFeatureFiltering, count);
     }
 

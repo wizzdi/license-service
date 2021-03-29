@@ -2,8 +2,8 @@ package com.flexicore.license.holders;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
-import com.flexicore.data.jsoncontainers.CrossLoaderResolver;
 import com.flexicore.license.model.LicenseRequestToEntity;
+import com.wizzdi.flexicore.boot.rest.resolvers.CrossLoaderResolver;
 
 import java.time.OffsetDateTime;
 

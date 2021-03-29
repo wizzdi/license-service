@@ -5,7 +5,7 @@ import com.flexicore.security.SecurityContextBase;
 
 public class LicenseRequestUpdateEvent {
     private LicenseRequest licenseRequest;
-    private SecurityContextBase securityContextBase;
+    private SecurityContextBase securityContext;
 
     public LicenseRequest getLicenseRequest() {
         return licenseRequest;
@@ -17,11 +17,11 @@ public class LicenseRequestUpdateEvent {
     }
 
     public SecurityContextBase getSecurityContextBase() {
-        return securityContextBase;
+        return securityContext;
     }
 
-    public <T extends LicenseRequestUpdateEvent> T setSecurityContextBase(SecurityContextBase securityContextBase) {
-        this.securityContextBase = securityContextBase;
+    public <T extends LicenseRequestUpdateEvent> T setSecurityContextBase(SecurityContextBase securityContext) {
+        this.securityContext = securityContext;
         return (T) this;
     }
 }
