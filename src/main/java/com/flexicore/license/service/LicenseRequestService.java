@@ -4,7 +4,7 @@ package com.flexicore.license.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flexicore.license.data.LicenseRequestRepository;
 
-import com.wizzdi.flexicore.encryption.service.EncryptionService;
+import com.wizzdi.flexicore.encryption.service.CommonEncryptionService;
 import com.wizzdi.flexicore.file.model.FileResource;
 import com.wizzdi.flexicore.file.request.FileResourceCreate;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
@@ -92,7 +92,7 @@ public class LicenseRequestService implements Plugin {
     private FileResourceService fileResourceService;
 
     @Autowired
-    private EncryptionService encryptionService;
+    private CommonEncryptionService commonEncryptionService;
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -406,7 +406,7 @@ public class LicenseRequestService implements Plugin {
         if (timeShift.exists()) {
             try {
                 String s = FileUtils.readFileToString(timeShift, StandardCharsets.UTF_8);
-                String decrypted = new String(encryptionService.decrypt(Base64.getDecoder().decode(s), timeShiftKey.getBytes()), StandardCharsets.UTF_8);
+                String decrypted = new String(commonEncryptionService.decrypt(Base64.getDecoder().decode(s), timeShiftKey.getBytes()), StandardCharsets.UTF_8);
                 long previouslyLoggedTime = Long.parseLong(decrypted);
                 boolean shifted = previouslyLoggedTime > currentTime;
                 if (!shifted) {
@@ -428,7 +428,7 @@ public class LicenseRequestService implements Plugin {
             }
         }
         String timeString = currentTime + "";
-        String encrypted = Base64.getEncoder().encodeToString(encryptionService.encrypt(timeString.getBytes(StandardCharsets.UTF_8), timeShiftKey.getBytes()));
+        String encrypted = Base64.getEncoder().encodeToString(commonEncryptionService.encrypt(timeString.getBytes(StandardCharsets.UTF_8), timeShiftKey.getBytes()));
         FileUtils.write(timeShift, encrypted, StandardCharsets.UTF_8, false);
     }
 
